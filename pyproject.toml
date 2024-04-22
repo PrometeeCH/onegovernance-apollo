@@ -4,7 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = [{ include = "your_package", from = "src" }]
+packages = [{ include = "apollo", from = "src" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
