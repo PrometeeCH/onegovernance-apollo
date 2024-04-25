@@ -2,7 +2,9 @@ import json
 import os
 
 import streamlit as st
+from langchain_core.messages import AIMessage, HumanMessage
 
+from apollo.chat import Chat
 from apollo.VectorStore import VectorStore
 
 
@@ -21,8 +23,10 @@ def main() -> None:
         st.session_state.delete_status = ""
 
     # Initialize chat state
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+    if st.session_state.get("chat") is None:
+        st.session_state.chat = Chat()
+
+    chat = st.session_state.chat
 
     # Sidebar for document upload
     with st.sidebar:
@@ -69,34 +73,40 @@ def main() -> None:
     st.sidebar.text(st.session_state.delete_status)
 
     # Chat input using st.chat_input
-    user_input = st.chat_input("Type your message here...", key="chat")
+    #user_input = st.chat_input("Type your message here...", key="chat")
 
-    # Process input and display chat
-    if user_input:
-        # Update chat history
-        update_chat(user_input)
-        # Clear the input field by forcing a rerun (Streamlit does not automatically clear st.chat_input)
-        st.rerun()
-
-    # Display chat messages
-    display_chat()
+    for message in chat.messages:
+        if type(message) == HumanMessage:
+            with st.chat_message("user"):
+                st.write(message.content)
+        elif type(message) == AIMessage:
+            with st.chat_message("assistant"):
+                st.write(message.content)
 
 
-def update_chat(user_input: str) -> None:
-    """Updates the chat with user input and AI responses."""
-    human_message = f"🧑 You: {user_input}"  # Adding an emoji for human messages
-    st.session_state.messages.append(human_message)
-    ai_response = get_ai_response(user_input)
-    st.session_state.messages.append(ai_response)
+
+    prompt = st.chat_input("Say something")
+    if prompt:
+        with st.spinner("..."):
+            chat.add_message(prompt)
+            st.rerun()
 
 
-def display_chat() -> None:
-    """Displays chat messages using markdown for better styling."""
-    chat_container = st.container()
-    with chat_container:
-        for message in reversed(st.session_state.messages):
-            # Use st.markdown to allow for better formatting if needed
-            st.markdown(f"{message}")
+# def update_chat(user_input: str) -> None:
+#     """Updates the chat with user input and AI responses."""
+#     human_message = f"🧑 You: {user_input}"  # Adding an emoji for human messages
+#     st.session_state.messages.append(human_message)
+#     ai_response = get_ai_response(user_input)
+#     st.session_state.messages.append(ai_response)
+
+
+# def display_chat() -> None:
+#     """Displays chat messages using markdown for better styling."""
+#     chat_container = st.container()
+#     with chat_container:
+#         for message in reversed(st.session_state.messages):
+#             # Use st.markdown to allow for better formatting if needed
+#             st.markdown(f"{message}")
 
 
 if __name__ == "__main__":
