@@ -20,6 +20,7 @@ azure-identity = "^1.16.0"
 pandas = "^2.2.2"
 streamlit = "^1.33.0"
 pymupdf = "^1.24.2"
+fitz = "^0.0.1.dev2"
 
 
 [tool.poetry.group.dev.dependencies]
