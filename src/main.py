@@ -15,7 +15,7 @@ def get_ai_response(user_input: str) -> str:
 
 def main() -> None:
     st.set_page_config(page_title="Apollo", layout="wide")
-    st.title("Apollo")
+    st.title("Apollo 13")
 
     vector_store = VectorStore()
 
@@ -73,7 +73,7 @@ def main() -> None:
     st.sidebar.text(st.session_state.delete_status)
 
     # Chat input using st.chat_input
-    #user_input = st.chat_input("Type your message here...", key="chat")
+    # user_input = st.chat_input("Type your message here...", key="chat")
 
     for message in chat.messages:
         if type(message) == HumanMessage:
@@ -82,8 +82,6 @@ def main() -> None:
         elif type(message) == AIMessage:
             with st.chat_message("assistant"):
                 st.write(message.content)
-
-
 
     prompt = st.chat_input("Say something")
     if prompt:
