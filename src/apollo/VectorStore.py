@@ -3,6 +3,7 @@ import os
 from typing import Any, List
 
 import fitz  # PyMuPDF for extracting PDF text and metadata
+import streamlit as st
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
 from azure.search.documents.indexes.models import (
@@ -16,6 +17,8 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores.azuresearch import AzureSearch
 from langchain_openai import AzureOpenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
+
+from apollo.Anonymizer import Anonymizer
 
 load_dotenv()
 
@@ -105,13 +108,25 @@ class VectorStore:
         documents = loader.load()
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
         docs = text_splitter.split_documents(documents)
+        anonymized_docs = []
+
+        progress_bar = st.progress(0)
         for i, doc in enumerate(docs):
+            # Anonymize doc
+            anonymized_doc = Anonymizer(
+                original_text=doc.page_content
+            ).get_anonymized_text()
+
+            doc = doc.copy(update={"page_content": anonymized_doc})
             doc.metadata.update(
                 {"title": str(title) + "-" + str(i + 1), "source": title}
             )  # This is to ensure that
             # we show different titles for multiple chunks of the same document.
+            anonymized_docs.append(doc)
+            progress_bar.progress(i + 1)
+        progress_bar.empty()
 
-        self._vector_store.add_documents(documents=docs)
+        self._vector_store.add_documents(documents=anonymized_docs)
 
     def fetch_documents(self, max_results: int = 10) -> List:
         results = []

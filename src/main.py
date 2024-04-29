@@ -34,13 +34,14 @@ def main() -> None:
         uploaded_file = st.file_uploader("Choose a file (only PDF)", type=["pdf"])
         if uploaded_file is not None:
             try:
-                with open("temp_file.pdf", "wb") as f:
+                with open("temp_file_anonymized.pdf", "wb") as f:
                     f.write(uploaded_file.getvalue())
-
                 try:
-                    title = vector_store.extract_title(pdf_path="temp_file.pdf")
+                    title = vector_store.extract_title(
+                        pdf_path="temp_file_anonymized.pdf"
+                    )
                     vector_store.push_document(
-                        document_path="temp_file.pdf", title=title
+                        document_path="temp_file_anonymized.pdf", title=title
                     )
                     st.success("File uploaded successfully!")
                 except Exception as e:
@@ -48,7 +49,7 @@ def main() -> None:
             except Exception as e:
                 st.error(f"Error while uploading the file. {e}")
 
-            os.remove("temp_file.pdf")
+            os.remove("temp_file_anonymized.pdf")
 
         # Display documents in the index
         st.header("Uploaded Documents")
@@ -83,7 +84,7 @@ def main() -> None:
             with st.chat_message("assistant"):
                 st.write(message.content)
 
-    prompt = st.chat_input("Say something")
+    prompt = st.chat_input("Say something...")
     if prompt:
         with st.spinner("..."):
             chat.add_message(prompt)

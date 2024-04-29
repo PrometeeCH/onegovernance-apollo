@@ -1,8 +1,8 @@
 from langchain.chains import create_retrieval_chain
 from langchain_core.runnables import Runnable
 
-from src.apollo.Answering import Answering
-from src.apollo.Reformulator import Reformulator
+from apollo.Answering import Answering
+from apollo.Reformulator import Reformulator
 
 
 class RAG:
