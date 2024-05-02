@@ -15,7 +15,7 @@ def get_ai_response(user_input: str) -> str:
 
 def main() -> None:
     st.set_page_config(page_title="Apollo", layout="wide")
-    st.title("Apollo 13")
+    st.title("Apollo - AI Specialized in Commodities.")
 
     vector_store = VectorStore()
 
