@@ -8,7 +8,7 @@ class Answering:
     def __init__(self, llm: ChatOpenAI):
         qa_system_prompt = """You are an assistant specialized in commodity trading. \
         Use the following pieces of retrieved context to answer the question. \
-        If you don't know the answer, just say that you don't know. \
+        If you don't know the answer, use chatGPT general knowledge. \
         Use three sentences maximum and keep the answer concise. \
 
         {context}"""
