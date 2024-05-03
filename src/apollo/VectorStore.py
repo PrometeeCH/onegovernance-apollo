@@ -13,7 +13,7 @@ from azure.search.documents.indexes.models import (
     SimpleField,
 )
 from dotenv import load_dotenv
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_community.vectorstores.azuresearch import AzureSearch
 from langchain_openai import AzureOpenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
@@ -102,10 +102,23 @@ class VectorStore:
                 title = first_page.get_text().split("\n")[0]
         return title
 
-    def push_document(self, document_path: str, title: str) -> None:
-        loader = PyPDFLoader(document_path)
+    @staticmethod
+    def load_document(file_path: str) -> List[str]:
+        file_type = file_path.split(".")[-1].lower()
+        documents = []
 
-        documents = loader.load()
+        if file_type == "pdf":
+            loader = PyPDFLoader(document_path=file_path)
+            documents = loader.load()
+        elif file_type == "txt":
+            loader = TextLoader(file_path)
+            documents = loader.load()
+        return documents
+
+    def push_document(self, document_path: str, title: str) -> None:
+        # Load documents depending on type (PDF or TXT)
+        documents = self.load_document(document_path)
+
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
         docs = text_splitter.split_documents(documents)
         anonymized_docs = []
