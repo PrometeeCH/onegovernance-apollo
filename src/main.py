@@ -31,25 +31,35 @@ def main() -> None:
     # Sidebar for document upload
     with st.sidebar:
         st.header("Upload a Document")
-        uploaded_file = st.file_uploader("Choose a file (only PDF)", type=["pdf"])
+        uploaded_file = st.file_uploader(
+            "Choose a file (PDF or TXT)", type=["pdf", "txt"]
+        )
         if uploaded_file is not None:
+            # Determine the file extension to handle file appropriately
+            file_type = uploaded_file.name.split(".")[-1].lower()
+            file_path = f"temp_file_anonymized.{file_type}"
+
+            # Write the uploaded file to a temporary file
+            with open(file_path, "wb") as f:
+                f.write(uploaded_file.getvalue())
+
             try:
-                with open("temp_file_anonymized.pdf", "wb") as f:
-                    f.write(uploaded_file.getvalue())
-                try:
-                    title = vector_store.extract_title(
-                        pdf_path="temp_file_anonymized.pdf"
-                    )
-                    vector_store.push_document(
-                        document_path="temp_file_anonymized.pdf", title=title
-                    )
-                    st.success("File uploaded successfully!")
-                except Exception as e:
-                    st.error(f"Error while uploading the file. {e}")
+                if file_type == "pdf":
+                    # Extract title from PDF and push the document
+                    title = vector_store.extract_title(pdf_path=file_path)
+                    vector_store.push_document(document_path=file_path, title=title)
+                elif file_type == "txt":
+                    # Assume the first line of the text file is the title
+                    with open(file_path, "r") as f:
+                        title = f.readline().strip()
+                    vector_store.push_document(document_path=file_path, title=title)
+
+                st.success("File uploaded successfully!")
+
             except Exception as e:
                 st.error(f"Error while uploading the file. {e}")
 
-            os.remove("temp_file_anonymized.pdf")
+            os.remove(file_path)
 
         # Display documents in the index
         st.header("Uploaded Documents")
