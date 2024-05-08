@@ -108,7 +108,7 @@ class VectorStore:
         documents = []
 
         if file_type == "pdf":
-            loader = PyPDFLoader(document_path=file_path)
+            loader = PyPDFLoader(file_path=file_path)
             documents = loader.load()
         elif file_type == "txt":
             loader = TextLoader(file_path)
