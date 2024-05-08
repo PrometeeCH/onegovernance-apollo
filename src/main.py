@@ -8,11 +8,6 @@ from apollo.chat import Chat
 from apollo.VectorStore import VectorStore
 
 
-def get_ai_response(user_input: str) -> str:
-    # Placeholder for AI response logic.
-    return f"🤖 AI: I'm just echoing for now: {user_input}"
-
-
 def main() -> None:
     st.set_page_config(page_title="Apollo", layout="wide")
     st.title("Apollo - AI Specialized in Commodities.")
@@ -30,36 +25,37 @@ def main() -> None:
 
     # Sidebar for document upload
     with st.sidebar:
-        st.header("Upload a Document")
-        uploaded_file = st.file_uploader(
-            "Choose a file (PDF or TXT)", type=["pdf", "txt"]
+        st.header("Upload Documents")
+        uploaded_files = st.file_uploader(
+            "Choose files (PDF or TXT)", type=["pdf", "txt"], accept_multiple_files=True
         )
-        if uploaded_file is not None:
-            # Determine the file extension to handle file appropriately
-            file_type = uploaded_file.name.split(".")[-1].lower()
-            file_path = f"temp_file_anonymized.{file_type}"
+        if uploaded_files is not None:
+            for uploaded_file in uploaded_files:
+                # Determine the file extension to handle file appropriately
+                file_type = uploaded_file.name.split(".")[-1].lower()
+                file_path = f"temp_file_{uploaded_file.name}"  # Name temp file with original name
 
-            # Write the uploaded file to a temporary file
-            with open(file_path, "wb") as f:
-                f.write(uploaded_file.getvalue())
+                # Write the uploaded file to a temporary file
+                with open(file_path, "wb") as f:
+                    f.write(uploaded_file.getvalue())
 
-            try:
-                if file_type == "pdf":
-                    # Extract title from PDF and push the document
-                    title = vector_store.extract_title(pdf_path=file_path)
-                    vector_store.push_document(document_path=file_path, title=title)
-                elif file_type == "txt":
-                    # Assume the first line of the text file is the title
-                    with open(file_path, "r") as f:
-                        title = f.readline().strip()
-                    vector_store.push_document(document_path=file_path, title=title)
+                try:
+                    if file_type == "pdf":
+                        # Extract title from PDF and push the document
+                        title = vector_store.extract_title(pdf_path=file_path)
+                        vector_store.push_document(document_path=file_path, title=title)
+                    elif file_type == "txt":
+                        # Assume the first line of the text file is the title
+                        with open(file_path, "r") as f:
+                            title = f.readline().strip()
+                        vector_store.push_document(document_path=file_path, title=title)
 
-                st.success("File uploaded successfully!")
+                    st.success(f"File '{uploaded_file.name}' uploaded successfully!")
 
-            except Exception as e:
-                st.error(f"Error while uploading the file. {e}")
+                except Exception as e:
+                    st.error(f"Error while uploading '{uploaded_file.name}'. {e}")
 
-            os.remove(file_path)
+                os.remove(file_path)  # Clean up the temporary file after processing
 
         # Display documents in the index
         st.header("Uploaded Documents")
@@ -83,14 +79,12 @@ def main() -> None:
 
     st.sidebar.text(st.session_state.delete_status)
 
-    # Chat input using st.chat_input
-    # user_input = st.chat_input("Type your message here...", key="chat")
-
+    # Handle chat and user interaction
     for message in chat.messages:
-        if type(message) == HumanMessage:
+        if isinstance(message, HumanMessage):
             with st.chat_message("user"):
                 st.write(message.content)
-        elif type(message) == AIMessage:
+        elif isinstance(message, AIMessage):
             with st.chat_message("assistant"):
                 st.write(message.content)
 
@@ -99,23 +93,6 @@ def main() -> None:
         with st.spinner("..."):
             chat.add_message(prompt)
             st.rerun()
-
-
-# def update_chat(user_input: str) -> None:
-#     """Updates the chat with user input and AI responses."""
-#     human_message = f"🧑 You: {user_input}"  # Adding an emoji for human messages
-#     st.session_state.messages.append(human_message)
-#     ai_response = get_ai_response(user_input)
-#     st.session_state.messages.append(ai_response)
-
-
-# def display_chat() -> None:
-#     """Displays chat messages using markdown for better styling."""
-#     chat_container = st.container()
-#     with chat_container:
-#         for message in reversed(st.session_state.messages):
-#             # Use st.markdown to allow for better formatting if needed
-#             st.markdown(f"{message}")
 
 
 if __name__ == "__main__":
