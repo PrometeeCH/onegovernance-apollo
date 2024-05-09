@@ -18,8 +18,6 @@ from langchain_community.vectorstores.azuresearch import AzureSearch
 from langchain_openai import AzureOpenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 
-from apollo.Anonymizer import Anonymizer
-
 load_dotenv()
 
 
@@ -126,11 +124,11 @@ class VectorStore:
         progress_bar = st.progress(0)
         for i, doc in enumerate(docs):
             # Anonymize doc
-            anonymized_doc = Anonymizer(
-                original_text=doc.page_content
-            ).get_anonymized_text()
+            # anonymized_doc = Anonymizer(
+            #     original_text=doc.page_content
+            # ).get_anonymized_text()
 
-            doc = doc.copy(update={"page_content": anonymized_doc})
+            # doc = doc.copy(update={"page_content": anonymized_doc})
             doc.metadata.update(
                 {"title": str(title) + "-" + str(i + 1), "source": title}
             )  # This is to ensure that
