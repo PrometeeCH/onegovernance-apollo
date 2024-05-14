@@ -9,7 +9,7 @@ class Answering:
         qa_system_prompt = """You are an assistant specialized in commodity trading. \
         Use the following pieces of retrieved context to answer the question. \
         If you don't know the answer, use chatGPT general knowledge. \
-        Use three sentences maximum and keep the answer concise. \
+        Give as much answer as possible but still keep the answer concise. \
 
         {context}"""
 
