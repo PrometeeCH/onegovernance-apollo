@@ -24,8 +24,9 @@ class Chat:
     def __init__(self) -> None:
         self.vectorstore = VectorStore()
 
-        # self.vectorstore.push_document("../data/Bilbo_Titan_Mythical_Creature 1.pdf")
-        retriever = self.vectorstore.get_vector_store().as_retriever()
+        retriever = self.vectorstore.get_vector_store().as_retriever(
+            search_type="similarity", search_kwargs={"k": 20}
+        )
 
         llm = AzureChatOpenAI(
             azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT_CHAT"),
