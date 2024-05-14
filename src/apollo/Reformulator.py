@@ -2,11 +2,11 @@ from langchain.chains import create_history_aware_retriever
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import Runnable
 from langchain_core.vectorstores import VectorStoreRetriever
-from langchain_openai import ChatOpenAI
+from langchain_openai import AzureChatOpenAI
 
 
 class Reformulator:
-    def __init__(self, llm: ChatOpenAI, retriever: VectorStoreRetriever) -> None:
+    def __init__(self, llm: AzureChatOpenAI, retriever: VectorStoreRetriever) -> None:
         contextualize_q_system_prompt = """Given a chat history and the latest user question \
         which might reference context in the chat history, formulate a standalone question \
         which can be understood without the chat history. Do NOT answer the question, \
