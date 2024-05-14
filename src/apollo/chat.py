@@ -1,12 +1,16 @@
+import os
 from typing import Any, List, Literal
 
+from dotenv import load_dotenv
 from langchain_core.messages import AIMessage, HumanMessage
-from langchain_openai import ChatOpenAI
+from langchain_openai import AzureChatOpenAI
 
-from apollo.Answering import Answering
-from apollo.RAG import RAG
-from apollo.Reformulator import Reformulator
-from apollo.VectorStore import VectorStore
+from src.apollo.Answering import Answering
+from src.apollo.RAG import RAG
+from src.apollo.Reformulator import Reformulator
+from src.apollo.VectorStore import VectorStore
+
+load_dotenv()
 
 Role = Literal["user", "assistant"]
 
@@ -23,7 +27,12 @@ class Chat:
         # self.vectorstore.push_document("../data/Bilbo_Titan_Mythical_Creature 1.pdf")
         retriever = self.vectorstore.get_vector_store().as_retriever()
 
-        llm = ChatOpenAI(model="gpt-4", temperature=0.1)  # change this
+        llm = AzureChatOpenAI(
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT_CHAT"),
+            openai_api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+            azure_deployment=os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT_NAME"),
+            openai_api_key=os.getenv("AZURE_OPENAI_API_KEY_CHAT"),
+        )
 
         reformulation_chain = Reformulator(
             llm=llm, retriever=retriever

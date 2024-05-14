@@ -1,11 +1,11 @@
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import Runnable
-from langchain_openai import ChatOpenAI
+from langchain_openai import AzureChatOpenAI
 
 
 class Answering:
-    def __init__(self, llm: ChatOpenAI):
+    def __init__(self, llm: AzureChatOpenAI):
         qa_system_prompt = """You are an assistant specialized in commodity trading. \
         Use the following pieces of retrieved context to answer the question. \
         If you don't know the answer, use chatGPT general knowledge. \

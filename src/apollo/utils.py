@@ -33,6 +33,7 @@ def check_password() -> bool:
         """Checks whether a password entered by the user is correct."""
         username = st.session_state["username"]
         password = st.session_state["password"]
+
         if username in users and users.get(username) == password:
             st.session_state["password_correct"] = True
             del st.session_state["password"]  # Don't store the username or password.
