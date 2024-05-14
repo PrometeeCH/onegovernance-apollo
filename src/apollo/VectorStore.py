@@ -121,7 +121,9 @@ class VectorStore:
         docs = text_splitter.split_documents(documents)
         anonymized_docs = []
 
+        total_docs = len(docs)
         progress_bar = st.progress(0)
+
         for i, doc in enumerate(docs):
             # Anonymize doc
             # anonymized_doc = Anonymizer(
@@ -130,11 +132,12 @@ class VectorStore:
 
             # doc = doc.copy(update={"page_content": anonymized_doc})
             doc.metadata.update(
-                {"title": str(title) + "-" + str(i + 1), "source": title}
+                {"title": f"{title}-{i + 1}", "source": title}
             )  # This is to ensure that
             # we show different titles for multiple chunks of the same document.
             anonymized_docs.append(doc)
-            progress_bar.progress(i + 1)
+            progress_percentage = int((i + 1) / total_docs * 100)
+            progress_bar.progress(progress_percentage)
         progress_bar.empty()
 
         self._vector_store.add_documents(documents=anonymized_docs)
