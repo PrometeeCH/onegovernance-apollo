@@ -11,7 +11,7 @@ load_dotenv()
 class Anonymizer:
     def __init__(self, original_text: str):
         self._original_text = original_text
-        llm = ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4")
+        llm = ChatOpenAI(api_key=os.getenv("AZURE_OPENAI_API_KEY_CHAT"), model="gpt-4")
         prompt = ChatPromptTemplate.from_messages(
             [
                 (

@@ -30,7 +30,7 @@ class VectorStore:
             api_key=os.getenv("AZURE_OPENAI_API_KEY"),
         )
         embedding_function = embeddings.embed_query
-        _DEFAULT = "apollo"
+        _DEFAULT = "onegovernance-index"
         index_name: str = os.getenv("INDEX_NAME", _DEFAULT)
         fields = [
             SimpleField(
@@ -45,7 +45,7 @@ class VectorStore:
                 searchable=True,
             ),
             SearchField(
-                name="content_vector",
+                name="content-vector",
                 type=SearchFieldDataType.Collection(SearchFieldDataType.Single),
                 searchable=True,
                 vector_search_dimensions=len(embedding_function("Text")),

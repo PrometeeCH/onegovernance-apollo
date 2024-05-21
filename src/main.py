@@ -5,13 +5,12 @@ import streamlit as st
 from langchain_core.messages import AIMessage, HumanMessage
 
 from apollo.chat import Chat
-from apollo.utils import check_password
 from apollo.VectorStore import VectorStore
 
 
 def main() -> None:
-    if not check_password():
-        st.stop()
+    # if not check_password():
+    #     st.stop()
     st.set_page_config(page_title="Apollo", layout="wide")
     st.title("Apollo - AI Specialized in Commodities.")
 

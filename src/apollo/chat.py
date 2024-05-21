@@ -5,10 +5,10 @@ from dotenv import load_dotenv
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_openai import AzureChatOpenAI
 
-from src.apollo.Answering import Answering
-from src.apollo.RAG import RAG
-from src.apollo.Reformulator import Reformulator
-from src.apollo.VectorStore import VectorStore
+from apollo.Answering import Answering
+from apollo.RAG import RAG
+from apollo.Reformulator import Reformulator
+from apollo.VectorStore import VectorStore
 
 load_dotenv()
 
