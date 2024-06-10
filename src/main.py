@@ -29,7 +29,7 @@ def main() -> None:
     with st.sidebar:
         st.header("Upload Documents")
         uploaded_files = st.file_uploader(
-            "Choose files (PDF or TXT)", type=["pdf", "txt"], accept_multiple_files=True
+            "Choose files (PDF, TXT, csv, json)", type=["pdf", "txt", "csv", "json"], accept_multiple_files=True
         )
         if uploaded_files is not None:
             for uploaded_file in uploaded_files:
@@ -51,11 +51,23 @@ def main() -> None:
                         with open(file_path, "r") as f:
                             title = f.readline().strip()
                         vector_store.push_document(document_path=file_path, title=title)
+                    elif file_type == "csv":
+                        # Assume the first column of the first row could serve as the title
+                        with open(file_path, "r") as f:
+                            first_line = f.readline()
+                            title = first_line.split(',')[0].strip()
+                        vector_store.push_document(document_path=file_path, title=title)
+                        
+                    elif file_type == "json":
+                        # Assume a top-level key named 'title' or 'name' serves as the document title
+                        with open(file_path, 'r') as file:
+                            data = json.load(file)
+                            title = data.get('title') or data.get('name') or "Untitled Document"
+                        vector_store.push_document(document_path=file_path, title=title)
 
                     st.success(f"File '{uploaded_file.name}' uploaded successfully!")
-
                 except Exception as e:
-                    st.error(f"Error while uploading '{uploaded_file.name}'. {e}")
+                    st.error(f"Failed to upload file '{uploaded_file.name}': {str(e)}")
 
                 os.remove(file_path)  # Clean up the temporary file after processing
 

@@ -1,6 +1,9 @@
 import json
 import os
 from typing import Any, List
+import pandas as pd
+
+from langchain_core.documents.base import Document
 
 import fitz  # PyMuPDF for extracting PDF text and metadata
 import streamlit as st
@@ -32,6 +35,8 @@ class VectorStore:
         embedding_function = embeddings.embed_query
         _DEFAULT = "onegovernance-index"
         index_name: str = os.getenv("INDEX_NAME", _DEFAULT)
+
+###################Retrival arguments ##############################
         fields = [
             SimpleField(
                 name="id",
@@ -57,6 +62,9 @@ class VectorStore:
                 searchable=True,
             ),
         ]
+######################################################################
+
+
         vector_store: AzureSearch = AzureSearch(
             azure_search_endpoint=os.getenv("VECTOR_STORE_ADDRESS"),
             azure_search_key=os.getenv("VECTOR_STORE_PASSWORD"),
@@ -101,6 +109,8 @@ class VectorStore:
         return title
 
     @staticmethod
+   
+
     def load_document(file_path: str) -> List[str]:
         file_type = file_path.split(".")[-1].lower()
         documents = []
@@ -111,19 +121,38 @@ class VectorStore:
         elif file_type == "txt":
             loader = TextLoader(file_path)
             documents = loader.load()
+        elif file_type == "csv":
+            documents= load_csv_as_documents(file_path)
+
+        elif file_type == "json":
+            with open(file_path, 'r') as file:
+                data = json.load(file)
+                # Si le JSON est une liste de dictionnaires, traiter chaque élément
+                if isinstance(data, list):
+                    documents = [", ".join(f"{key}: {value}" for key, value in item.items()) for item in data]
+                else:
+                    # Traiter le cas où le JSON est un dictionnaire unique
+                    documents = [", ".join(f"{key}: {value}" for key, value in data.items())]
+
         return documents
+
 
     def push_document(self, document_path: str, title: str) -> None:
         # Load documents depending on type (PDF or TXT)
         documents = self.load_document(document_path)
-
-        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        print(documents)
+        print("1")
+        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0) ###################################### we can play for the mebdings 
+        print("2")
+        
+        
         docs = text_splitter.split_documents(documents)
+        print("3")
         anonymized_docs = []
 
         total_docs = len(docs)
         progress_bar = st.progress(0)
-
+        print("4")
         for i, doc in enumerate(docs):
             # Anonymize doc
             # anonymized_doc = Anonymizer(
@@ -139,6 +168,7 @@ class VectorStore:
             progress_percentage = int((i + 1) / total_docs * 100)
             progress_bar.progress(progress_percentage)
         progress_bar.empty()
+        print("5")
 
         self._vector_store.add_documents(documents=anonymized_docs)
 
@@ -162,3 +192,45 @@ class VectorStore:
             return ""
         except Exception as e:
             return f"Error detected while deleting document {document_key}: {e}"
+        
+
+
+def load_csv_as_documents(file_path):
+    # Charger le fichier CSV
+    df = pd.read_csv(file_path)
+
+    # Créer une liste pour stocker les objets Document
+    documents = []
+
+    # Itérer sur chaque ligne du DataFrame
+    for index, row in df.iterrows():
+        # Concaténer toutes les colonnes pour former le contenu de la page
+        page_content = ' '.join(row.astype(str))
+        
+        # Créer un objet Document de langchain_core avec le contenu de la page et le numéro de ligne comme métadonnée
+        documents.append(Document(page_content=page_content, metadata={'line_number': index}))
+
+    return documents
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
