@@ -181,15 +181,13 @@ class DataGenerator:
         result_dict["32. Description"] = description
         return result_dict  # Return the resulting dictionary
 
-    def generate_project_data(self, nb_elem_base: int) -> None:
+    def generate_project_data(self, df: pd.DataFrame) -> None:
         # Load projects from CSV
-        df_projects = pd.read_csv(
-            "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_scrapped/ikea_foundation_projects.csv"
-        )
+        df_projects = df
 
         # Process each project
         results = []
-        for index, row in df_projects.head(nb_elem_base).iterrows():
+        for index, row in df_projects.iterrows():
             project_info = row.to_json()
             prompt_template = self.create_template(
                 1, project_info, "previous_part", "general_info", "template_part"
@@ -205,7 +203,7 @@ class DataGenerator:
             index=False,
         )
 
-    def generate_project_report(self, nb_elem: int) -> None:
+    def generate_project_report(self) -> None:
         # Load projects from CSV
         df_projects = pd.read_csv(
             "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/filled_projects.csv"
@@ -213,7 +211,7 @@ class DataGenerator:
 
         # Process each project
         results = []
-        for index, row in df_projects.head(nb_elem).iterrows():
+        for index, row in df_projects.iterrows():
             project_data = row.to_json()
             prompt = self.create_template(
                 2, project_data, "previous_part", "general_info", "template_part"
@@ -228,11 +226,9 @@ class DataGenerator:
             index=False,
         )
 
-    def generate_project_report_full(self, nb_elem_base: int, nb_elem: int) -> None:
-        if nb_elem_base < nb_elem:
-            nb_elem = nb_elem_base
-        self.generate_project_data(nb_elem_base)
-        self.generate_project_report(nb_elem)
+    def generate_project_report_full(self, df: pd.DataFrame) -> None:
+        self.generate_project_data(df)
+        self.generate_project_report()
 
     def generate_yearly_by_part(self, nb_elem: int) -> pd.DataFrame:
         # Load data from CSV
