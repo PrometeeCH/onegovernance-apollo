@@ -4,6 +4,7 @@ import datetime
 import os
 
 import pandas as pd
+from docx import Document
 from fpdf import FPDF
 from openai import AzureOpenAI
 
@@ -23,6 +24,10 @@ class DataGenerator:
         previous_part: str,
         general_info: str,
         template_part: str,
+        report_type: str = "",
+        year: str = "",
+        quarter: str = "",
+        month: str = "",
     ) -> str:
         if case == 1:  # case for yearly report project_report_gen_data.py
             today = datetime.date.today().strftime("%Y-%m-%d")
@@ -126,12 +131,19 @@ class DataGenerator:
 
                         """
         elif case == 3:  # case for yearly report yearly_report_gen_by_part.py
-            prompt = f"""As a yearly report writer for the IKEA Foundation, your task is to compose a section of the annual report. The section you provide must be precise. Please follow the structured guidance provided below:
+            if report_type == "monthly":
+                ajout = f"the report must be about the {month} {year}"
+            elif report_type == "quarterly":
+                ajout = f"the report must be about the {quarter} of {year}"
+            else:
+                ajout = f"The report is a yealy report for the year of {year}"
+
+            prompt = f"""I want you to be a {report_type} report writer for the IKEA Foundation, your task is to compose a section of the  {report_type}.{ajout} The section you provide must be precise. Please follow the structured guidance provided below:
 
                         1. Section Overview: First, here is a brief explanation of the specific part of the report you are tasked to write:
                         {template_part}
 
-                        2. Project Data: Review the data from projects funded by the foundation over the past year. Use this information to highlight key achievements and progress:
+                        2. Project Data: Review the data from projects funded by the foundation. Use this information to highlight key achievements and progress:
                         {project_data}
                         Note: This is the end of the project data.
 
@@ -156,7 +168,7 @@ class DataGenerator:
         response = self.client.chat.completions.create(
             model="Gpt-4-onegovernance",
             messages=[{"role": "user", "content": prompt_}],
-            max_tokens=1900,
+            max_tokens=1700,
             temperature=0.7,
             top_p=1.0,
             frequency_penalty=0.0,
@@ -188,7 +200,7 @@ class DataGenerator:
         # Process each project
         results = []
         for index, row in df_projects.iterrows():
-            project_info = row.to_json()
+            project_info = row.to_string()
             prompt_template = self.create_template(
                 1, project_info, "previous_part", "general_info", "template_part"
             )
@@ -230,7 +242,9 @@ class DataGenerator:
         self.generate_project_data(df)
         self.generate_project_report()
 
-    def generate_yearly_by_part(self, nb_elem: int) -> pd.DataFrame:
+    def generate_yearly_by_part(
+        self, report_type: str, year: str, quarter: str = "", month: str = ""
+    ) -> pd.DataFrame:
         # Load data from CSV
         df_general_info = pd.read_csv(
             "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_scrapped/yearly_report_data.csv"
@@ -243,7 +257,7 @@ class DataGenerator:
         )
 
         # Get the data of the right form
-        project_info = df_projects_report.head(nb_elem).to_string(index=False)
+        project_info = df_projects_report.to_string(index=False)
         general_info = df_general_info.to_string(index=False)
 
         # Process each part
@@ -261,6 +275,10 @@ class DataGenerator:
                     yearly_parts[index - 1],
                     general_info,
                     part["contenu"],
+                    report_type,
+                    year,
+                    quarter,
+                    month,
                 )
             response = self.get_response(prompt)
             yearly_parts.append(response)
@@ -280,11 +298,11 @@ class DataGenerator:
         # start_time = time.time()
         combined_string = " ".join(df_yearly_report["contenu"])  # type: ignore
 
-        prompt = f"""Task:I want you to transform a Yearly Report writen not continously by part into a Continuous Narrative with part.
+        prompt = f"""Task:I want you to transform a  Report writen not continously by part into a Continuous Narrative with part.
 
-                    Input Text, the yearly report writen by part:{combined_string}
+                    Input Text, the report writen by part:{combined_string}
 
-                    Objective: i want you to rewrite the provided yearly report (input text) into a cohesive, continuous yearly report. Avoid redundancy and ensure smooth transitions between sections.
+                    Objective: i want you to rewrite the provided report (input text) into a cohesive, continuous report. Avoid redundancy and ensure smooth transitions between sections.
 
                     Instructions:
 
@@ -323,7 +341,7 @@ class DataGenerator:
         return reponse
 
     def rewrite_yearly(self, changes: str, full_report: str) -> str:
-        prompt = f"""As a yearly report editor, you're tasked with modifying the following report: {full_report}.
+        prompt = f"""As a report editor, you're tasked with modifying the following report: {full_report}.
         The requested modifications are as follows: {changes}.
         Please ensure these adjustments are both accurate and closely aligned with the original content.
         It's important to note that these changes are your top priority.
@@ -336,9 +354,6 @@ class DataGenerator:
         return response
 
     def summarize_report(self, report: str) -> str:
-        # Load the report from CSV
-        # df_report = pd.read_csv("../../../data/data_gen/yearly_final.csv")
-        # start_time = time.time()
         combined_string = report
 
         prompt = f"""Input Text, the yearly report written by part:{combined_string}
@@ -421,3 +436,17 @@ def text_to_pdf(input_string: str, header: str, output_filename: str) -> None:
     pdf.multi_cell(0, 10, input_string)
 
     pdf.output(output_filename)
+
+
+def text_to_docx(input_string: str, header: str, output_filename: str) -> None:
+    document = Document()
+
+    # Set header
+    title = document.add_heading(level=1)
+    title.add_run(header)
+
+    # Add the main text
+    document.add_paragraph(input_string)
+
+    # Save the document
+    document.save(output_filename)
