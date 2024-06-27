@@ -166,9 +166,8 @@ class DataGenerator:
 
     def get_response(self, prompt_: str) -> str:
         response = self.client.chat.completions.create(
-            model="Gpt-4-onegovernance",
+            model= os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT_NAME"],
             messages=[{"role": "user", "content": prompt_}],
-            max_tokens=1700,
             temperature=0.7,
             top_p=1.0,
             frequency_penalty=0.0,
@@ -211,14 +210,13 @@ class DataGenerator:
         # Save results to CSV
         df_results = pd.DataFrame(results)
         df_results.to_csv(
-            "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/filled_projects.csv",
+            "Create_yearly/data/data_gen/filled_projects.csv",
             index=False,
         )
-
     def generate_project_report(self) -> None:
         # Load projects from CSV
         df_projects = pd.read_csv(
-            "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/filled_projects.csv"
+            "Create_yearly/data/data_gen/filled_projects.csv"
         )
 
         # Process each project
@@ -234,12 +232,12 @@ class DataGenerator:
         # Save results to CSV
         df_results = pd.DataFrame(results, columns=["Filled Project Report"])
         df_results.to_csv(
-            "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/projects_report.csv",
+            "Create_yearly/data/data_gen/projects_report.csv",
             index=False,
         )
 
     def generate_project_report_full(self, df: pd.DataFrame) -> None:
-        self.generate_project_data(df)
+        #self.generate_project_data(df)
         self.generate_project_report()
 
     def generate_yearly_by_part(
@@ -247,13 +245,13 @@ class DataGenerator:
     ) -> pd.DataFrame:
         # Load data from CSV
         df_general_info = pd.read_csv(
-            "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_scrapped/yearly_report_data.csv"
+            "Create_yearly/data/data_scrapped/yearly_report_data.csv"
         )
         df_projects_report = pd.read_csv(
-            "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/projects_report.csv"
+            "Create_yearly/data/data_gen/projects_report.csv"
         )
         df_annal_template = pd.read_csv(
-            "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_scrapped/annualrewiew_template.csv"
+            "Create_yearly/data/data_scrapped/annualrewiew_template.csv"
         )
 
         # Get the data of the right form
@@ -288,7 +286,7 @@ class DataGenerator:
             {"partie": df_annal_template.index + 1, "contenu": yearly_parts}
         )
         df_yearly_report.to_csv(
-            "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/yearly_by_part.csv",
+            "Create_yearly/data/data_gen/yearly_by_part.csv",
             index=False,
         )
         return df_yearly_report
@@ -333,7 +331,7 @@ class DataGenerator:
         reponse = self.get_response(prompt)
 
         # Chemin du fichier CSV
-        output_file = "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/yearly_final.csv"
+        output_file = "Create_yearly/data/data_gen/yearly_final.csv"
 
         # Écriture dans le fichier CSV
         self.to__csv(output_file, reponse)
@@ -348,7 +346,7 @@ class DataGenerator:
         All information from the original yearly report should be retained in the revised version, unless specified otherwise in the requested changes.
         """
         response = self.get_response(prompt)
-        output_file = "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/yearly_final_r.csv"
+        output_file = "Create_yearly/data/data_gen/yearly_final_r.csv"
         self.to__csv(output_file, response)
 
         return response
@@ -375,7 +373,7 @@ class DataGenerator:
         response = self.get_response(prompt)
 
         # Chemin du fichier CSV
-        output_file = "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/yearly_summary.csv"
+        output_file = "Create_yearly/data/data_gen/yearly_summary.csv"
 
         # Écriture dans le fichier CSV
         self.to__csv(output_file, response)
@@ -385,7 +383,7 @@ class DataGenerator:
     # fonction ######################################
     def nb_projects(self) -> int:
         df = pd.read_csv(
-            "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_scrapped/ikea_foundation_projects.csv"
+            "Create_yearly/data/data_scrapped/ikea_foundation_projects.csv"
         )
         return int(df.shape[0])
 

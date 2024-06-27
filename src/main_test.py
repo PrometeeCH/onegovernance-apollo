@@ -18,6 +18,12 @@ from Create_yearly.src.one_governance.utils import filter_by_date, get_report_pe
 
 
 def main() -> None:
+    #both false if you have alread computed all the project report
+    create_project_report = False # to create the report for each project during the user exp
+    create_all_project_report = False # to create all the report for each project at the beginning of the user exp
+
+
+
     st.set_page_config(page_title="Apollo", layout="wide")
 
     # Sidebar for navigation
@@ -30,7 +36,7 @@ def main() -> None:
 
     # Ouvrez l'image se trouvant en local
     image = Image.open(
-        "/home/peyron/Documents/Prometee/onegovernance-apollo/data/White logo - no background.png"
+        "../data/White logo - no background.png"
     )
 
     # Allows to choose the position of the logo for all pages
@@ -51,7 +57,7 @@ def main() -> None:
         # Create a DataGenerator instance
         data_gen = DataGenerator()
         # Load the number of projects
-        nb_project = data_gen.nb_projects()
+        #nb_project = data_gen.nb_projects()
 
         # Get user input for nb_elem_base and nb_elem
         Demo = st.checkbox("Demo")
@@ -67,7 +73,7 @@ def main() -> None:
         year = st.number_input(
             "Enter the Year", min_value=2000, max_value=2023, step=1, value=2023
         )  # modify the min_value and max_value as per your requirement
-        file_path = "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_scrapped/ikea_foundation_projects.csv"
+        file_path = "Create_yearly/data/data_scrapped/ikea_foundation_projects.csv"
 
         if report_type == "Quarterly":
             # Ask for the quarter if a quarterly report is selected
@@ -97,12 +103,34 @@ def main() -> None:
             )
 
         month_start, month_end = get_report_period(year, report_type, quarter, month)
+
+        if not create_project_report:
+            #here we add the columns date to the results project df
+            file_path = "src/Create_yearly/data/data_gen/projects_report.csv"
+            df_v1 = pd.read_csv("src/Create_yearly/data/data_scrapped/ikea_foundation_projects.csv")
+            df_ = pd.read_csv(file_path)
+            df_["Date Choice"] = df_v1["Date Choice"]
+    
         df = filter_by_date(file_path, month_start, month_end)
+
+
+            
+        #to create all the report: 
+        if create_project_report and create_all_project_report:
+            df = pd.read_csv(file_path)
+
+        st.write(df.shape[0], " projects found in the selected period.")
+        if Demo:  # elseif recreate_option == 'No':
+                full_report = pd.read_csv(
+                    "Create_yearly/data/data_gen/yearly_final.csv",
+                    header=None,
+                )[0].values[0]
 
         if st.button("Generate report"):
             if not Demo:
-                with st.spinner("Gathering project reports..."):
-                    data_gen.generate_project_report_full(df)
+                if create_project_report :
+                    with st.spinner("Gathering project reports..."):
+                        data_gen.generate_project_report_full(df)
                 with st.spinner("Generating yearly report..."):
                     df_yearly_by_part = data_gen.generate_yearly_by_part(
                         report_type, year, quarter, month
@@ -111,7 +139,7 @@ def main() -> None:
                 st.success("Yearly report generated successfully!")
             elif Demo:  # elseif recreate_option == 'No':
                 full_report = pd.read_csv(
-                    "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/yearly_final.csv",
+                    "Create_yearly/data/data_gen/yearly_final.csv",
                     header=None,
                 )[0].values[0]
                 st.success("Yearly report generated successfully!")
@@ -149,12 +177,12 @@ def main() -> None:
             file_format = st.sidebar.selectbox("Select file format", ["DOCX", "PDF"])
 
             if file_format == "PDF":
-                output_full_pdf = "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/yearly_report.pdf"
+                output_full_pdf = "Create_yearly/data/data_gen/yearly_report.pdf"
                 text_to_pdf(full_report_text, "Yearly Report", output_full_pdf)
                 output_full = output_full_pdf
 
             elif file_format == "DOCX":
-                output_full_docx = "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/yearly_report.docx"
+                output_full_docx = "Create_yearly/data/data_gen/yearly_report.docx"
                 text_to_docx(full_report_text, "Yearly Report", output_full_docx)
                 output_full = output_full_docx
 
