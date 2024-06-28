@@ -14,22 +14,23 @@ from Create_yearly.src.one_governance.GenAI.Gen_full_class import (  # Replace '
     text_to_docx,
     text_to_pdf,
 )
-from Create_yearly.src.one_governance.utils import filter_by_date, get_report_period
+from Create_yearly.src.one_governance.utils import filter_by_date, get_report_period, filter_by_date_2
 
 
 def main() -> None:
     #both false if you have alread computed all the project report
     create_project_report = False # to create the report for each project during the user exp
     create_all_project_report = False # to create all the report for each project at the beginning of the user exp
-
-
+    one_shot = True # si on veut ecrire le rapport en une fois et non par partie
 
     st.set_page_config(page_title="Apollo", layout="wide")
+
+    # Write ikea project overwiew 
 
     # Sidebar for navigation
     with st.sidebar:
         page = st.radio(
-            "Select a page", ["Home", "Knowledge Hub", "Yearly Report generation"]
+            "Select a page", ["Report overview", "Ikea foundation: Knowledge Hub", "Yearly Report generation"]
         )
     # st.header("Select a page")
     # page = st.radio("", ["Yearly Report", "Appolo"])
@@ -44,15 +45,10 @@ def main() -> None:
     with col2:
         st.image(image, caption="", use_column_width=False, width=150)
 
-    if page == "Home":
-        st.title("One Philantropy - AI tools for foundations. 🚀")
-        st.header("Welcome to our site")
-        st.write(
-            "This site allows you to generate yearly reports and asks question to your data. Please select a page from the sidebar to get started."
-        )
 
-    elif page == "Yearly Report generation":
-        st.header("Yearly Report Generation 📈")
+    if page =="Report overview":
+        st.header("IKEA report overview")
+        col1_1, col1_2 = st.columns([1, 1])
 
         # Create a DataGenerator instance
         data_gen = DataGenerator()
@@ -60,20 +56,99 @@ def main() -> None:
         #nb_project = data_gen.nb_projects()
 
         # Get user input for nb_elem_base and nb_elem
-        Demo = st.checkbox("Demo")
+        Demo = False #st.checkbox("Demo")
 
         # Ask for the report type
-        report_type = st.selectbox(
-            "Which type of report would you like to generate?",
-            ("Yearly", "Quarterly", "Monthly"),
-        )
+        with col1_1:
+            report_type = st.selectbox(
+                "Which report would you like to generate?",
+                ("Yearly", "Quarterly", "Monthly"),
+            )
         quarter = None
         month = None
         # Ask for the year
-        year = st.number_input(
-            "Enter the Year", min_value=2000, max_value=2023, step=1, value=2023
-        )  # modify the min_value and max_value as per your requirement
-        file_path = "Create_yearly/data/data_scrapped/ikea_foundation_projects.csv"
+        with col1_2:
+            year = st.number_input(
+                "Enter the Year", min_value=2000, max_value=2023, step=1, value=2023
+            )  # modify the min_value and max_value as per your requirement
+
+        if report_type == "Quarterly":
+            # Ask for the quarter if a quarterly report is selected
+            quarter = st.selectbox(
+                "Which quarter would you like to use for the report?",
+                ("1st Quarter", "2nd Quarter", "3rd Quarter", "4th Quarter"),
+            )
+
+        elif report_type == "Monthly":
+            # Ask for the month if a monthly report is selected
+            month = st.selectbox(
+                "Which month would you like to use for the report?",
+                (
+                    "January",
+                    "February",
+                    "March",
+                    "April",
+                    "May",
+                    "June",
+                    "July",
+                    "August",
+                    "September",
+                    "October",
+                    "November",
+                    "December",
+                ),
+            )
+
+        month_start, month_end = get_report_period(year, report_type, quarter, month)
+
+        file_path = "Create_yearly/data/data_gen/filled_projects.csv"
+    
+
+
+        df = filter_by_date_2(file_path, month_start, month_end)
+        ##################################################  TO FINISH  ###############################33
+        ## Faire une fonction transforamnt certaine colonne du df en info type nombre ou autre pour pouvoir être analysé
+        #df = clean_trasform_data(df, month_start, month_end)
+
+        #### Afficher des infos interessant
+        st.write(df['Date Choice'])
+        
+    
+        # Group by the Date Choice and count the number of projects
+        project_counts = df.groupby('Date Choice').size()
+
+        # Plot the data
+        st.line_chart(project_counts)
+
+        st.write(df.shape[0], " projects found in the selected period.")
+
+        #st.write(df.shape[0], " projects found in the selected period.")
+    elif page == "Yearly Report generation":
+        st.header("Summary of Yearly Report 📈")
+        col1_1, col1_2 = st.columns([1, 1])
+
+        # Create a DataGenerator instance
+        data_gen = DataGenerator()
+        # Load the number of projects
+        #nb_project = data_gen.nb_projects()
+
+        # Get user input for nb_elem_base and nb_elem
+        Demo = False #st.checkbox("Demo")
+
+        # Ask for the report type
+        with col1_1:
+            report_type = st.selectbox(
+                "Which report would you like to generate?",
+                ("Yearly", "Quarterly", "Monthly"),
+            )
+        quarter = None
+        month = None
+        # Ask for the year
+        with col1_2:
+            year = st.number_input(
+                "Enter the Year", min_value=2000, max_value=2023, step=1, value=2023
+            )  # modify the min_value and max_value as per your requirement
+        file_path = "Create_yearly/data/data_gen/projects_report.csv"
 
         if report_type == "Quarterly":
             # Ask for the quarter if a quarterly report is selected
@@ -106,10 +181,13 @@ def main() -> None:
 
         if not create_project_report:
             #here we add the columns date to the results project df
-            file_path = "src/Create_yearly/data/data_gen/projects_report.csv"
-            df_v1 = pd.read_csv("src/Create_yearly/data/data_scrapped/ikea_foundation_projects.csv")
-            df_ = pd.read_csv(file_path)
-            df_["Date Choice"] = df_v1["Date Choice"]
+            file_path = "Create_yearly/data/data_gen/projects_report.csv"
+          #  df_v1 = pd.read_csv("Create_yearly/data/data_scrapped/ikea_foundation_projects.csv")
+          #  df_ = pd.read_csv(file_path)
+          #  df_["Date Choice"] = df_v1["Date Choice"]
+          #
+          # #df_.to_csv("Create_yearly/data/data_gen/projects_report.csv",index=False,)
+
     
         df = filter_by_date(file_path, month_start, month_end)
 
@@ -128,14 +206,24 @@ def main() -> None:
 
         if st.button("Generate report"):
             if not Demo:
-                if create_project_report :
-                    with st.spinner("Gathering project reports..."):
-                        data_gen.generate_project_report_full(df)
-                with st.spinner("Generating yearly report..."):
-                    df_yearly_by_part = data_gen.generate_yearly_by_part(
-                        report_type, year, quarter, month
-                    )
-                    full_report = data_gen.transform_response(df_yearly_by_part)
+                if one_shot:
+                    with st.spinner(f"Generating {report_type} report at once..."):
+                        full_report = data_gen.write_yearly_in_one_shot(
+                            report_type, year,df, quarter, month) 
+
+                else:
+                    if create_project_report :
+                        with st.spinner("Gathering project reports..."):
+                            data_gen.generate_project_report_full(df)
+                    with st.spinner(f"Generating {report_type} report..."):
+                        if not create_project_report:
+                            df_yearly_by_part = data_gen.generate_yearly_by_part(
+                            report_type, year,df, quarter, month)
+                        else: 
+                            df_yearly_by_part = data_gen.generate_yearly_by_part(
+                            report_type, year,df, quarter, month, True)
+
+                        full_report = data_gen.transform_response(df_yearly_by_part)
                 st.success("Yearly report generated successfully!")
             elif Demo:  # elseif recreate_option == 'No':
                 full_report = pd.read_csv(
@@ -191,8 +279,8 @@ def main() -> None:
                 unsafe_allow_html=True,
             )
 
-    elif page == "Knowledge Hub":
-        st.header("Knowledge Hub 📚")
+    elif page == "Ikea foundation: Knowledge Hub":
+        st.header("IKEA foundation: Knowledge Hub 📚")
 
         vector_store = VectorStore()
 

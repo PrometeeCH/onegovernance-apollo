@@ -132,13 +132,13 @@ class DataGenerator:
                         """
         elif case == 3:  # case for yearly report yearly_report_gen_by_part.py
             if report_type == "monthly":
-                ajout = f"the report must be about the {month} {year}"
+                ajout = f"the report must be about the {month} {year}, write it keeping in mind that is a report for this given period."
             elif report_type == "quarterly":
-                ajout = f"the report must be about the {quarter} of {year}"
+                ajout = f"the report must be about the {quarter} of {year},  write it keeping in mind that is a report for this given period."
             else:
-                ajout = f"The report is a yealy report for the year of {year}"
+                ajout = f"The report is a yealy report for the year of {year}, write it keeping in mind that is a report for this given period."
 
-            prompt = f"""I want you to be a {report_type} report writer for the IKEA Foundation, your task is to compose a section of the  {report_type}.{ajout} The section you provide must be precise. Please follow the structured guidance provided below:
+            prompt = f"""I want you to be a {report_type} report writer for the IKEA Foundation, your task is to compose a section of the  {report_type} report.{ajout}. The section you provide must be precise. Please follow the structured guidance provided below:
 
                         1. Section Overview: First, here is a brief explanation of the specific part of the report you are tasked to write:
                         {template_part}
@@ -168,6 +168,7 @@ class DataGenerator:
         response = self.client.chat.completions.create(
             model= os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT_NAME"],
             messages=[{"role": "user", "content": prompt_}],
+            max_tokens=4096,
             temperature=0.7,
             top_p=1.0,
             frequency_penalty=0.0,
@@ -237,19 +238,92 @@ class DataGenerator:
         )
 
     def generate_project_report_full(self, df: pd.DataFrame) -> None:
-        #self.generate_project_data(df)
+        self.generate_project_data(df)
         self.generate_project_report()
+    
+    def write_yearly_in_one_shot(self, report_type: str, year: str,df:pd.DataFrame, quarter: str = "", month: str = "", case: bool = False
+    ) -> str:
+         # Load data from CSV
+        df_general_info = pd.read_csv(
+            "Create_yearly/data/data_scrapped/yearly_report_data.csv"
+        )
+        if case:
+            df_projects_report = pd.read_csv(
+                "Create_yearly/data/data_gen/projects_report.csv"
+            )
+        else:
+            df_projects_report=df
 
+        df_annal_template = pd.read_csv(
+            "Create_yearly/data/data_scrapped/annualrewiew_template.csv"
+        )
+        df_exemple = pd.read_csv(
+            "Create_yearly/data/data_scrapped/annualrewiew2022.csv"
+        )
+
+        # Get the data of the right form
+        project_info = df_projects_report.to_string(index=False)
+        general_info = df_general_info.to_string(index=False)
+        annual_template = df_annal_template.to_string(index=False)
+        exemple = df_exemple.to_string(index=False)
+
+        if report_type == "monthly":
+                ajout = f"the report must be about the month {month} of the year {year}, write it keeping in mind that is a report for this given period."
+                exemple = f""
+        elif report_type == "quarterly":
+                ajout = f"the report must be about the {quarter} of the year {year},  write it keeping in mind that is a report for this given period."
+                exemple = f""
+        else:
+                ajout = f"The report is a yearly report for the year of {year}, write it keeping in mind that is a report for this given period."
+                exemple =  f"4. exemple of a yearly report for the ikea foundation, you can use it as an exemple but you must be original and not following too much the exemple:{exemple}"
+
+        prompt = f"""I want you to be a {report_type} report writer for the IKEA Foundation, your task is to write {report_type} report.{ajout}. The section you provide must be precise. Please follow the structured guidance provided below:
+
+                        1. Section Overview: First, here is a brief explanation of the specifics parts of the report you are tasked to write:
+                        {annual_template}
+
+                        2. Project Data: Review the data from projects funded by the foundation. Use this information to highlight key achievements and progress:
+                        {project_info}
+                        Note: This is the end of the project data.
+
+                        3. Foundation Overview: Incorporate the following general information about the foundation to provide context and factual background in your report:
+                        {general_info}
+                        Note: This is the end of the general information.
+                        
+                        {exemple}
+
+                        The should create a streamlined, logically coherent report that is precise and detailed.
+
+
+                        All data should be presented in a professional manner. For data marked with [x], include this marker in your text right after the relevant information or at the end of the sentence to emphasize its importance.
+
+                        The report must be writen in a professional and continuous manner and must be precise and composed with details and report is long, do not try to make it short.
+
+                        """
+
+        reponse = self.get_response(prompt)
+
+        # Chemin du fichier CSV
+        output_file = "Create_yearly/data/data_gen/yearly_final_one.csv"
+
+        # Écriture dans le fichier CSV
+        self.to__csv(output_file, reponse)
+        return reponse
+    
     def generate_yearly_by_part(
-        self, report_type: str, year: str, quarter: str = "", month: str = ""
+        self, report_type: str, year: str,df:pd.DataFrame, quarter: str = "", month: str = "", case: bool = False
     ) -> pd.DataFrame:
         # Load data from CSV
         df_general_info = pd.read_csv(
             "Create_yearly/data/data_scrapped/yearly_report_data.csv"
         )
-        df_projects_report = pd.read_csv(
-            "Create_yearly/data/data_gen/projects_report.csv"
-        )
+        if case:
+            df_projects_report = pd.read_csv(
+                "Create_yearly/data/data_gen/projects_report.csv"
+            )
+        else:
+            df_projects_report=df
+
         df_annal_template = pd.read_csv(
             "Create_yearly/data/data_scrapped/annualrewiew_template.csv"
         )
@@ -300,7 +374,7 @@ class DataGenerator:
 
                     Input Text, the report writen by part:{combined_string}
 
-                    Objective: i want you to rewrite the provided report (input text) into a cohesive, continuous report. Avoid redundancy and ensure smooth transitions between sections.
+                    Objective: i want you to rewrite the provided report (input text) into a cohesive, continuous report.Ensure smooth transitions between sections.
 
                     Instructions:
 
@@ -308,9 +382,9 @@ class DataGenerator:
                     2. Ensure Smooth Transitions: Link sections seamlessly without summarizing at transitions. you can put a tiltle for each section as you will have in the writen by part version.
                     3. Maintain Professional Tone: Keep the tone formal and suitable for stakeholders.
                     4. Review for Flow and Accuracy: Ensure the narrative flows logically and retains all factual data accurately.
-                    5. For each part the new and olv versionmust be approximately the same length.
+                    5. For each part the new version must be approximately the same length.
 
-                    Your rewrite should create a streamlined, logically coherent report that communicates effectively without unnecessary repetition.
+                    Your rewrite should create a streamlined, logically coherent report that is precise and using all the information available .
 
                     The final result should be a continuous narrative that flows logically from one section to the next and must be as precise and profesional as you can, do not try to be succint, be precise.
                     The final result must be composed of 12 part with their titles. For each part of the yearly report, the context and info are in the Input Text. Here are the name of the different part.

@@ -48,7 +48,7 @@ def get_report_period(
 import pandas as pd
 
 
-def filter_by_date(file_path, start_date, end_date) -> pd.DataFrame:
+def filter_by_date(file_path:str, start_date, end_date) -> pd.DataFrame:
     # Convertir les dates en datetime object avec l'année et le mois
     start_date = pd.to_datetime(start_date).to_period("M")
     end_date = pd.to_datetime(end_date).to_period("M")
@@ -63,3 +63,29 @@ def filter_by_date(file_path, start_date, end_date) -> pd.DataFrame:
         )  # Convertir la colonne date_chois en datetime avec juste l'année et le mois
         # Filtrer sur les lignes où date_chois est entre la date de début et de fin
         return df[(df["Date Choice"] >= start_date) & (df["Date Choice"] <= end_date)]
+
+
+def filter_by_date_2(file_path:str, start_date, end_date) -> pd.DataFrame:
+    # Convertir les dates en datetime object avec l'année et le mois
+    start_date = pd.to_datetime(start_date).to_period("M")
+    end_date = pd.to_datetime(end_date).to_period("M")
+
+    # Lire le df à partir du fichier csv
+    df = pd.read_csv(file_path)
+
+    # Vérifie si 'Date Choice' est une colonne dans le dataframe
+    if "Date Choice" in df.columns and "Date Choice end" in df.columns:
+        df["Date Choice"] = pd.to_datetime(df["Date Choice"]).dt.to_period(
+            "M"
+        )  # Convertir la colonne date_chois en datetime avec juste l'année et le mois
+        df["Date Choice end"] = pd.to_datetime(df["Date Choice end"]).dt.to_period(
+            "M"
+        )  # Convertir la colonne date_chois_end en datetime avec juste l'année et le mois
+
+        # Filtrer sur les lignes où date_chois est inférieur à end_date et date_chois_end est plus grand que start_date
+        return df[(df["Date Choice"] < end_date) & (df["Date Choice end"] > start_date)]
+
+
+def clean_trasform_data(df:pd.DataFrame)-> pd.DataFrame:
+
+    return df

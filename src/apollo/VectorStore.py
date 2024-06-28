@@ -150,7 +150,7 @@ class VectorStore:
         elif file_type == "xlsx":
             documents = load_xlsx_as_documents(file_path)
         elif file_type == "docx":
-            documents = load_xlsx_as_documents(file_path)
+            documents = load_docx_as_documents(file_path)
         return documents
 
     @staticmethod
