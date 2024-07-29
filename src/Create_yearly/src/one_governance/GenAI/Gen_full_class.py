@@ -1,24 +1,36 @@
+import base64
+import csv
 import datetime
 import os
-import csv
-import time
+
 import pandas as pd
-from openai import AzureOpenAI
+from docx import Document
+from docx.shared import Pt
 from fpdf import FPDF
-import base64
+from openai import AzureOpenAI
 
 
 class DataGenerator:
-    def __init__(self):
+    def __init__(self) -> None:
         self.client = AzureOpenAI(
             api_key=os.environ["AZURE_OPENAI_API_KEY_CHAT"],
             azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT_CHAT"],
             api_version=os.environ["AZURE_OPENAI_API_VERSION_CHAT"],
         )
 
-    def create_template(self, case:int, project_data: str, previous_part:str, general_info: str, template_part:str ) -> str:
-    
-        if case == 1:# case for yearly report project_report_gen_data.py
+    def create_template(
+        self,
+        case: int,
+        project_data: str,
+        previous_part: str,
+        general_info: str,
+        template_part: str,
+        report_type: str = "",
+        year: str = "",
+        quarter: str = "",
+        month: str = "",
+    ) -> str:
+        if case == 1:  # case for yearly report project_report_gen_data.py
             today = datetime.date.today().strftime("%Y-%m-%d")
             prompt = f""" Generate synthetic information for a project. Use the current available information( if you can found it after project data:), otherwise, generate the information needed.
                         Note that in the following we specify the available and not available data. Here are the specifics:
@@ -61,22 +73,78 @@ class DataGenerator:
 
                         the generated or found information should never be "not available" because if they are you should generate them.
                         """
-        
-        elif case == 2:# case for project report project_report_gen.py
+
+        elif case == 2:  # case for project report project_report_gen.py
             prompt = f"""I want you to be a project report writer reporter for a foundation.
                         In the following case you will write for the ikea foundation projects.
                         Write a project report with the following data about the project:
                         {project_data}
                         For the data with a marker [x] you must add the marker in the text(right after the info or at the end of the sentence). This is to specify that the data used has not been generated(it is real data).
                         I just want the project report to be written in a professional way. without adding any explanation or anything else. But it must be writen in a way that it is a report. not just a list of data.
+
+                        The report must be as the following exemple with the info addaptaded for the data of the project:
+
+                        PROJECT REPORT
+
+                        Title: Donation: Africa Private Sector Forum on Forced Displacement 2023 [x]
+
+                        Geographical Scope: This initiative is primarily focused on Africa, with the specific country and city yet to be defined [x].
+
+                        UN Goal: Aligned with the United Nations' Goal 8, the project endeavors to promote Decent Work and Economic Growth [x].
+
+                        Type of Giving: The project follows the model of Traditional Philanthropy [x].
+
+                        Budget Overview: With a total budget of $500,000 [x], the project has already secured $300,000 [x] in funding, leaving $200,000 [x] yet to be funded.
+
+                        Distribution Type: The funding will be distributed per project [x].
+
+                        Project Timeline: The project is set to commence in May 2023 [x] and is slated for completion by December 2023.
+
+                        Contribution: Our foundation has contributed 60% of the current funding [x].
+
+                        Funding Status: At present, the project's funding status remains open [x].
+
+                        Partnerships: The project is supported by the IKEA Foundation (40%), UNHCR (20%), and the African Entrepreneur Collective (40%) [x]. The project's management is led by Abigail Nkomo, with consultation provided by Amahoro Consultancy Services [x].
+
+                        Key Performance Indicators: The project aims to engage at least 100 private sector actors and secure 50 new commitments from businesses to support displaced communities [x].
+
+                        SWOT Analysis:
+                        Strengths - Strong coalition of partners with diverse strengths and resources [x].
+                        Weaknesses - Difficulties in coordinating between different partners and stakeholders [x].
+                        Opportunities - High potential for impact by involving the private sector in addressing forced displacement [x].
+                        Threats - Potential lack of interest or commitment from private sector actors [x].
+
+                        Review Comments: The project shows potential but requires stronger engagement strategies to attract private sector actors [x].
+
+                        Satisfaction Ranking: The project has received an overall satisfaction ranking of 7/10 [x]. The strategic satisfaction ranking is 8/10 [x], while the partners and organization & processes have scored 6/10 and 7/10 respectively [x]. The communication has also been ranked at 7/10 [x].
+
+                        Satisfaction Comments: Overall, partners are satisfied with the progress but are optimistic about improving the project further [x].
+
+                        Additional Comments: The forum provides a unique platform to address forced displacement issues but requires more focused strategies [x].
+
+                        Author: This report has been compiled by Josephine Tendai [x].
+
+                        Date of the Last Update: June 2, 2024 [x].
+
+                        Contact Details: Josephine can be reached at j.tendai@africaprivatesectorforum.org [x].
+
+                        Project Description: The IKEA Foundation is supporting the African Entrepreneur Collective, in collaboration with the Amahoro Coalition and UNHCR, to host the second African Private Sector Forum for Refugees. Through this forum, the partners aim to build on and amplify the need to engage private sector actors in displacement setting [x].
+
                         """
-        elif case == 3:# case for yearly report yearly_report_gen_by_part.py
-            prompt = f"""As a yearly report writer for the IKEA Foundation, your task is to compose a section of the annual report. Please follow the structured guidance provided below:
+        elif case == 3:  # case for yearly report yearly_report_gen_by_part.py
+            if report_type == "Monthly":
+                ajout = f"the report must be about the {month} {year}, write it keeping in mind that is a report for this given period."
+            elif report_type == "Quarterly":
+                ajout = f"the report must be about the {quarter} of {year},  write it keeping in mind that is a report for this given period."
+            else:
+                ajout = f"The report is a yealy report for the year of {year}, write it keeping in mind that is a report for this given period."
+
+            prompt = f"""I want you to be a {report_type} report writer for the IKEA Foundation, your task is to compose a section of the  {report_type} report.{ajout}. The section you provide must be precise. Please follow the structured guidance provided below:
 
                         1. Section Overview: First, here is a brief explanation of the specific part of the report you are tasked to write:
                         {template_part}
 
-                        2. Project Data: Review the data from projects funded by the foundation over the past year. Use this information to highlight key achievements and progress:
+                        2. Project Data: Review the data from projects funded by the foundation. Use this information to highlight key achievements and progress:
                         {project_data}
                         Note: This is the end of the project data.
 
@@ -92,16 +160,16 @@ class DataGenerator:
 
                         This previous part provides essential context, ensuring that your contribution is integrated smoothly without duplicating content. Use this context to enhance the flow and coherence of the report, contributing unique insights or information that progresses the narrative logically.
                         For each part, write the title of the part at the beginning of the text.
-                    
+
                         """
 
         return prompt
 
     def get_response(self, prompt_: str) -> str:
         response = self.client.chat.completions.create(
-            model="Gpt-4-onegovernance",
+            model=os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT_NAME"],
             messages=[{"role": "user", "content": prompt_}],
-            max_tokens=1500,
+            max_tokens=4096,
             temperature=0.7,
             top_p=1.0,
             frequency_penalty=0.0,
@@ -126,86 +194,254 @@ class DataGenerator:
         result_dict["32. Description"] = description
         return result_dict  # Return the resulting dictionary
 
-    def generate_project_data(self, nb_elem_base: int) -> None:
+    def generate_project_data(self, df: pd.DataFrame) -> None:
         # Load projects from CSV
-        df_projects = pd.read_csv("/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_scrapped/ikea_foundation_projects.csv")
-        
+        df_projects = df
+
         # Process each project
         results = []
-        for index, row in df_projects.head(nb_elem_base).iterrows():
-            project_info = row.to_json()
-            prompt_template = self.create_template(1, project_info, "previous_part", "general_info", "template_part")
+        for index, row in df_projects.iterrows():
+            project_info = row.to_string()
+            prompt_template = self.create_template(
+                1, project_info, "previous_part", "general_info", "template_part"
+            )
             filled_info = self.get_response(prompt_template)
             filled_infoo = self.create_dict_from_text(filled_info, row.Description)
             results.append(filled_infoo)
 
         # Save results to CSV
         df_results = pd.DataFrame(results)
-        df_results.to_csv("/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/filled_projects.csv", index=False)
-    
+        df_results.to_csv(
+            "Create_yearly/data/data_gen/filled_projects.csv",
+            index=False,
+        )
 
-    def generate_project_report(self, nb_elem: int) -> None:
+    def generate_project_report(self) -> None:
         # Load projects from CSV
-        df_projects = pd.read_csv("/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/filled_projects.csv")
+        df_projects = pd.read_csv("Create_yearly/data/data_gen/filled_projects.csv")
 
         # Process each project
         results = []
-        for index, row in df_projects.head(nb_elem).iterrows():
+        for index, row in df_projects.iterrows():
             project_data = row.to_json()
-            prompt = self.create_template(2, project_data, "previous_part", "general_info", "template_part")
+            prompt = self.create_template(
+                2, project_data, "previous_part", "general_info", "template_part"
+            )
             filled_info = self.get_response(prompt)
             results.append(filled_info)
 
         # Save results to CSV
         df_results = pd.DataFrame(results, columns=["Filled Project Report"])
-        df_results.to_csv("/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/projects_report.csv", index=False)
+        df_results.to_csv(
+            "Create_yearly/data/data_gen/projects_report.csv",
+            index=False,
+        )
 
-    
+    def generate_project_report_full(self, df: pd.DataFrame) -> None:
+        self.generate_project_data(df)
+        self.generate_project_report()
 
-    def generate_project_report_full(self, nb_elem_base: int, nb_elem: int) -> None:
-        if nb_elem_base < nb_elem:
-            nb_elem = nb_elem_base
-        self.generate_project_data(nb_elem_base)
-        self.generate_project_report(nb_elem)
-    
-    def generate_yearly_by_part(self) -> pd.DataFrame:
+    def write_yearly_in_one_shot(
+        self,
+        report_type: str,
+        year: str,
+        df: pd.DataFrame,
+        quarter: str = "",
+        month: str = "",
+        case: bool = False,
+    ) -> str:
         # Load data from CSV
-        df_general_info = pd.read_csv("/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_scrapped/yearly_report_data.csv")
-        df_projects_report = pd.read_csv("/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/projects_report.csv")
-        df_annal_template = pd.read_csv("/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_scrapped/annualrewiew_template.csv")
+        df_general_info = pd.read_csv(
+            "Create_yearly/data/data_scrapped/yearly_report_data.csv"
+        )
+        if case:
+            df_projects_report = pd.read_csv(
+                "Create_yearly/data/data_gen/projects_report.csv"
+            )
+        else:
+            df_projects_report = df
+
+        df_annal_template = pd.read_csv(
+            "Create_yearly/data/data_scrapped/annualrewiew_template.csv"
+        )
+        df_exemple = pd.read_csv(
+            "Create_yearly/data/data_scrapped/annualrewiew2022.csv"
+        )
+
+        # Get the data of the right form
+        project_info = df_projects_report.to_string(index=False)
+        general_info = df_general_info.to_string(index=False)
+        annual_template = df_annal_template.to_string(index=False)
+        exemple = df_exemple.to_string(index=False)
+
+        if report_type == "Monthly":
+            ajout = f"the report must be about the month {month} of the year {year}, write it keeping in mind that is a report for this given period."
+            exemple = ""
+        elif report_type == "Quarterly":
+            ajout = f"the report must be about the {quarter} of the year {year},  write it keeping in mind that is a report for this given period."
+            exemple = ""
+        else:
+            ajout = f"The report is a yearly report for the year of {year}, write it keeping in mind that is a report for this given period."
+            exemple = f"4. exemple of a yearly report for the ikea foundation, you can use it as an exemple but you must be original and not following too much the exemple:{exemple}"
+
+        prompt = f"""I want you to be a {report_type} report writer for the IKEA Foundation, your task is to write {report_type} report.{ajout}. The section you provide must be precise. Please follow the structured guidance provided below:
+
+                        1. Section Overview: First, here is a brief explanation of the specifics parts of the report you are tasked to write:
+                        {annual_template}
+
+                        2. Project Data: Review the data from projects funded by the foundation. Use this information to highlight key achievements and progress:
+                        {project_info}
+                        Note: This is the end of the project data.
+
+                        3. Foundation Overview: Incorporate the following general information about the foundation to provide context and factual background in your report:
+                        {general_info}
+                        Note: This is the end of the general information.
+
+                        {exemple}
+
+                        The should create a streamlined, logically coherent report that is precise and detailed.
+
+
+                        All data should be presented in a professional manner. For data marked with [x], include this marker in your text right after the relevant information or at the end of the sentence to emphasize its importance.
+
+                        The report must be writen in a professional and continuous manner and must be precise and composed with details and report is long, do not try to make it short.
+
+                        """
+
+        reponse = self.get_response(prompt)
+
+        # Chemin du fichier CSV
+        output_file = "Create_yearly/data/data_gen/yearly_final.csv"
+
+        # Écriture dans le fichier CSV
+        self.to__csv(output_file, reponse)
+        return reponse
+
+    def generate_yearly_by_part(
+        self,
+        report_type: str,
+        year: str,
+        df: pd.DataFrame,
+        quarter: str = "",
+        month: str = "",
+        case: bool = False,
+    ) -> pd.DataFrame:
+        # Load data from CSV
+        df_general_info = pd.read_csv(
+            "Create_yearly/data/data_scrapped/yearly_report_data.csv"
+        )
+        if case:
+            df_projects_report = pd.read_csv(
+                "Create_yearly/data/data_gen/projects_report.csv"
+            )
+        else:
+            df_projects_report = df
+
+        df_annal_template = pd.read_csv(
+            "Create_yearly/data/data_scrapped/annualrewiew_template.csv"
+        )
 
         # Get the data of the right form
         project_info = df_projects_report.to_string(index=False)
         general_info = df_general_info.to_string(index=False)
 
         # Process each part
-        yearly_parts = []
+        yearly_parts: list[str] = []
         for index, part in df_annal_template.iterrows():
             case_0 = "this is the first part we are creating hence no previous part"
             if index == 0:
-                prompt = self.create_template(3, project_info, case_0, general_info, part["contenu"])
+                prompt = self.create_template(
+                    3,
+                    project_info,
+                    case_0,
+                    general_info,
+                    part["contenu"],
+                    report_type,
+                    year,
+                    quarter,
+                    month,
+                )
             else:
-                prompt = self.create_template(3, project_info, yearly_parts[index-1], general_info, part["contenu"])
+                prompt = self.create_template(
+                    3,
+                    project_info,
+                    yearly_parts[index - 1],
+                    general_info,
+                    part["contenu"],
+                    report_type,
+                    year,
+                    quarter,
+                    month,
+                )
             response = self.get_response(prompt)
             yearly_parts.append(response)
 
         # Save results to CSV
-        df_yearly_report = pd.DataFrame({"partie": df_annal_template.index +1, "contenu": yearly_parts})
-        df_yearly_report.to_csv("/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/yearly_by_part.csv", index=False)
+        df_yearly_report = pd.DataFrame(
+            {"partie": df_annal_template.index + 1, "contenu": yearly_parts}
+        )
+        df_yearly_report.to_csv(
+            "Create_yearly/data/data_gen/yearly_by_part.csv",
+            index=False,
+        )
         return df_yearly_report
-        
 
+    def generate_yearly_chosen_part(
+        self,
+        report_type: str,
+        year: str,
+        df: pd.DataFrame,
+        part: int,
+        quarter: str = "",
+        month: str = "",
+    ) -> str:
+        # Load data from CSV
+        df_general_info = pd.read_csv(
+            "Create_yearly/data/data_scrapped/yearly_report_data.csv"
+        )
+
+        df_projects_report = df
+
+        df_annual_template = pd.read_csv(
+            "Create_yearly/data/data_scrapped/annualrewiew_template.csv"
+        )
+
+        # Get the data of the right form
+        project_info = df_projects_report.to_string(index=False)
+        general_info = df_general_info.to_string(index=False)
+        print(df_annual_template.iloc[part]["contenu"])
+
+        prompt = self.create_template(
+            3,
+            project_info,
+            "",
+            general_info,
+            df_annual_template.iloc[part]["contenu"],
+            report_type,
+            year,
+            quarter,
+            month,
+        )
+        response = self.get_response(prompt)
+
+        # Save results to CSV
+        df_yearly_report = pd.DataFrame({"partie": [part], "contenu": [response]})
+        df_yearly_report.to_csv(
+            "Create_yearly/data/data_gen/yearly_final.csv",
+            index=False,
+        )
+        return response
 
     def transform_response(self, df_yearly_report: str) -> str:
-        #df_yearly_report = pd.read_csv("../../../data/data_gen/yearly_by_part.csv")
-        #start_time = time.time()
-        combined_string = ' '.join(df_yearly_report['contenu'])
+        # df_yearly_report = pd.read_csv("../../../data/data_gen/yearly_by_part.csv")
+        # start_time = time.time()
+        combined_string = " ".join(df_yearly_report["contenu"])  # type: ignore
 
-        prompt= f"""Task:I want you to transform a Yearly Report writen not continously by part into a Continuous Narrative with part.
+        prompt = f"""Task:I want you to transform a  Report writen not continously by part into a Continuous Narrative with part.
 
-                    Input Text, the yearly report writen by part:{combined_string}
+                    Input Text, the report writen by part:{combined_string}
 
-                    Objective: i want you to rewrite the provided yealy report into a cohesive, continuous yearly report. Avoid redundancy and ensure smooth transitions between sections.
+                    Objective: i want you to rewrite the provided report (input text) into a cohesive, continuous report.Ensure smooth transitions between sections.
 
                     Instructions:
 
@@ -213,16 +449,13 @@ class DataGenerator:
                     2. Ensure Smooth Transitions: Link sections seamlessly without summarizing at transitions. you can put a tiltle for each section as you will have in the writen by part version.
                     3. Maintain Professional Tone: Keep the tone formal and suitable for stakeholders.
                     4. Review for Flow and Accuracy: Ensure the narrative flows logically and retains all factual data accurately.
-                    5. For each part the new and olv versionmust be approximately the same length.
+                    5. For each part the new version must be approximately the same length.
 
-                    Your rewrite should create a streamlined, logically coherent report that communicates effectively without unnecessary repetition.
+                    Your rewrite should create a streamlined, logically coherent report that is precise and using all the information available .
 
-                    attention there is 12 part in the yearly report and i want all of them in th efinal results. hence you should have 12 subtitles titles in the final results. here are the different part: 
-                
-
-                    The final result should be a continuous narrative that flows logically from one section to the next anf must be appriximately the same length as the input text.
-                    the final result must be composed of 12 subtitles titles. for each part of the yearly report, the context and info are in the Input Text. Here are the name of the different part.
-                    1. Letter from the Chairperson/President:  
+                    The final result should be a continuous narrative that flows logically from one section to the next and must be as precise and profesional as you can, do not try to be succint, be precise.
+                    The final result must be composed of 12 part with their titles. For each part of the yearly report, the context and info are in the Input Text. Here are the name of the different part.
+                    1. Letter from the Chairperson/President:
                     2. Mission Statement:
                     3. Executive Summary:
                     4. Year in Review/Highlights:
@@ -231,28 +464,35 @@ class DataGenerator:
                     7. Fundraising Activities:
                     8. Volunteer Contributions:
                     9. Governance Information:
-                    10. Future Outlook and Goals: 
+                    10. Future Outlook and Goals:
                     11. Acknowledgments and Appreciation:
                     12. Contact Information:
+                    I want all of them in the final result.
                     """
         reponse = self.get_response(prompt)
 
         # Chemin du fichier CSV
-        output_file = "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/yearly_final.csv"
+        output_file = "Create_yearly/data/data_gen/yearly_final.csv"
 
         # Écriture dans le fichier CSV
-        with open(output_file, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            # Écrire la chaîne dans une ligne du CSV
-            writer.writerow([reponse])
+        self.to__csv(output_file, reponse)
+
         return reponse
 
+    def rewrite_yearly(self, changes: str, full_report: str) -> str:
+        prompt = f"""As a report editor, you're tasked with modifying the following report: {full_report}.
+        The requested modifications are as follows: {changes}.
+        Please ensure these adjustments are both accurate and closely aligned with the original content.
+        It's important to note that these changes are your top priority.
+        All information from the original yearly report should be retained in the revised version, unless specified otherwise in the requested changes.
+        """
+        response = self.get_response(prompt)
+        output_file = "Create_yearly/data/data_gen/yearly_final_r.csv"
+        self.to__csv(output_file, response)
 
+        return response
 
     def summarize_report(self, report: str) -> str:
-        # Load the report from CSV
-        #df_report = pd.read_csv("../../../data/data_gen/yearly_final.csv")
-        #start_time = time.time()
         combined_string = report
 
         prompt = f"""Input Text, the yearly report written by part:{combined_string}
@@ -266,7 +506,7 @@ class DataGenerator:
                 3. Maintain Professional Tone: The condensed version must be formal and suitable for stakeholders.
                 4. Ensure Accuracy: Keep all factual information from the original text intact.
 
-                The final condensed version should provide a succinct, informative overview of the yearly report while maintaining the format and essence of the original. Each section of the condensed report should be concise, yet comprehensive, capturing the key details from the respective sections of the original. 
+                The final condensed version should provide a succinct, informative overview of the yearly report while maintaining the format and essence of the original. Each section of the condensed report should be concise, yet comprehensive, capturing the key details from the respective sections of the original.
 
                 The final condensed version should be approximately 20 sentences in length, spread structurally across the respective sections.
  """
@@ -274,55 +514,100 @@ class DataGenerator:
         response = self.get_response(prompt)
 
         # Chemin du fichier CSV
-        output_file = "/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_gen/yearly_summary.csv"
+        output_file = "Create_yearly/data/data_gen/yearly_summary.csv"
 
         # Écriture dans le fichier CSV
-        with open(output_file, mode='w', newline='', encoding='utf-8') as file:
+        self.to__csv(output_file, response)
+
+        return response
+
+    # fonction ######################################
+    def nb_projects(self) -> int:
+        df = pd.read_csv(
+            "Create_yearly/data/data_scrapped/ikea_foundation_projects.csv"
+        )
+        return int(df.shape[0])
+
+    def to__csv(
+        self, output_file: str, reponse: str
+    ) -> None:  # Écriture dans le fichier CSV
+        with open(output_file, mode="w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             # Écrire la chaîne dans une ligne du CSV
-            writer.writerow([response])
-        return response
-    
-# fonction ######################################
-    def nb_projects(self) -> int:
-            df = pd.read_csv("/home/peyron/Documents/Prometee/onegovernance-apollo/src/Create_yearly/data/data_scrapped/ikea_foundation_projects.csv")
-            return df.shape[0]
-    
+            writer.writerow([reponse])
 
-def get_binary_file_downloader_html(bin_file, file_label='File'):
-    with open(bin_file, 'rb') as f:
+
+def get_binary_file_downloader_html(bin_file: str, file_label: str = "File") -> str:
+    with open(bin_file, "rb") as f:
         data = f.read()
     bin_str = base64.b64encode(data).decode()
     bin_file = os.path.basename(bin_file)
     href = f'<a href="data:application/octet-stream;base64,{bin_str}" download="{bin_file}">Download {file_label}</a>'
     return href
 
-class PDF(FPDF):
-    def header(self):
-        pass
-    def footer(self):
-        self.set_y(-15)
-        self.set_font('Times', 'I', 8)
-        self.cell(0, 10, 'Page %s' % self.page_no(), 0, 0, 'C')
 
-def text_to_pdf(input_string, header, output_filename):
-    
+class PDF(FPDF):
+    def header(self) -> None:
+        pass
+
+    def footer(self) -> None:
+        self.set_y(-15)
+        self.set_font("Times", "I", 8)
+        self.cell(0, 10, "Page %s" % self.page_no(), 0, 0, "C")
+
+
+def text_to_pdf(input_string: str, header: str, output_filename: str) -> None:
     pdf = PDF()
     pdf.set_right_margin(10)
     pdf.set_left_margin(10)
-    
-    pdf.set_font('Times', '', 12)
+
+    pdf.set_font("Times", "", 12)
     pdf.add_page()
 
     # Set header
-    pdf.set_font('Times', 'B', 14)
-    pdf.cell(0, 10, header, ln=True, align='C')
+    pdf.set_font("Times", "B", 14)
+    pdf.cell(0, 10, header, ln=True, align="C")
 
     # Set font back to normal
-    pdf.set_font('Times', '', 12)
+    pdf.set_font("Times", "", 12)
 
     input_string = input_string.replace("€", " EUR")
     pdf.multi_cell(0, 10, input_string)
-    
+
     pdf.output(output_filename)
-       
+
+
+from docx import Document
+from docx.shared import Pt
+
+
+def text_to_docx(input_string: str, header: str, output_filename: str) -> None:
+    document = Document()
+
+    # Set header
+    title = document.add_heading(level=1)
+    title_run = title.add_run(header)
+    title_run.bold = True
+    title_run.font.size = Pt(14)
+
+    # Analyze and add the main text
+    paragraphs = input_string.split("\n")
+    for paragraph in paragraphs:
+        if "**" in paragraph:
+            # Split the paragraph at each "**" and toggle the bold style
+            parts = paragraph.split("**")
+            p = document.add_paragraph()
+            bold = False
+            for part in parts:
+                run = p.add_run(part)
+                if bold:
+                    # Apply bold to the part between the "**"
+                    run.bold = True
+                # Toggle the bold state for the next part
+                bold = not bold
+        else:
+            # Regular paragraph
+            document.add_paragraph(paragraph)
+
+    # Save the document
+    document.save(output_filename)
