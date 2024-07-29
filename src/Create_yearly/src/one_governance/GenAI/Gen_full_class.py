@@ -5,6 +5,7 @@ import os
 
 import pandas as pd
 from docx import Document
+from docx.shared import Pt
 from fpdf import FPDF
 from openai import AzureOpenAI
 
@@ -131,9 +132,9 @@ class DataGenerator:
 
                         """
         elif case == 3:  # case for yearly report yearly_report_gen_by_part.py
-            if report_type == "monthly":
+            if report_type == "Monthly":
                 ajout = f"the report must be about the {month} {year}, write it keeping in mind that is a report for this given period."
-            elif report_type == "quarterly":
+            elif report_type == "Quarterly":
                 ajout = f"the report must be about the {quarter} of {year},  write it keeping in mind that is a report for this given period."
             else:
                 ajout = f"The report is a yealy report for the year of {year}, write it keeping in mind that is a report for this given period."
@@ -166,7 +167,7 @@ class DataGenerator:
 
     def get_response(self, prompt_: str) -> str:
         response = self.client.chat.completions.create(
-            model= os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT_NAME"],
+            model=os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT_NAME"],
             messages=[{"role": "user", "content": prompt_}],
             max_tokens=4096,
             temperature=0.7,
@@ -214,11 +215,10 @@ class DataGenerator:
             "Create_yearly/data/data_gen/filled_projects.csv",
             index=False,
         )
+
     def generate_project_report(self) -> None:
         # Load projects from CSV
-        df_projects = pd.read_csv(
-            "Create_yearly/data/data_gen/filled_projects.csv"
-        )
+        df_projects = pd.read_csv("Create_yearly/data/data_gen/filled_projects.csv")
 
         # Process each project
         results = []
@@ -240,10 +240,17 @@ class DataGenerator:
     def generate_project_report_full(self, df: pd.DataFrame) -> None:
         self.generate_project_data(df)
         self.generate_project_report()
-    
-    def write_yearly_in_one_shot(self, report_type: str, year: str,df:pd.DataFrame, quarter: str = "", month: str = "", case: bool = False
+
+    def write_yearly_in_one_shot(
+        self,
+        report_type: str,
+        year: str,
+        df: pd.DataFrame,
+        quarter: str = "",
+        month: str = "",
+        case: bool = False,
     ) -> str:
-         # Load data from CSV
+        # Load data from CSV
         df_general_info = pd.read_csv(
             "Create_yearly/data/data_scrapped/yearly_report_data.csv"
         )
@@ -252,7 +259,7 @@ class DataGenerator:
                 "Create_yearly/data/data_gen/projects_report.csv"
             )
         else:
-            df_projects_report=df
+            df_projects_report = df
 
         df_annal_template = pd.read_csv(
             "Create_yearly/data/data_scrapped/annualrewiew_template.csv"
@@ -267,15 +274,15 @@ class DataGenerator:
         annual_template = df_annal_template.to_string(index=False)
         exemple = df_exemple.to_string(index=False)
 
-        if report_type == "monthly":
-                ajout = f"the report must be about the month {month} of the year {year}, write it keeping in mind that is a report for this given period."
-                exemple = f""
-        elif report_type == "quarterly":
-                ajout = f"the report must be about the {quarter} of the year {year},  write it keeping in mind that is a report for this given period."
-                exemple = f""
+        if report_type == "Monthly":
+            ajout = f"the report must be about the month {month} of the year {year}, write it keeping in mind that is a report for this given period."
+            exemple = ""
+        elif report_type == "Quarterly":
+            ajout = f"the report must be about the {quarter} of the year {year},  write it keeping in mind that is a report for this given period."
+            exemple = ""
         else:
-                ajout = f"The report is a yearly report for the year of {year}, write it keeping in mind that is a report for this given period."
-                exemple =  f"4. exemple of a yearly report for the ikea foundation, you can use it as an exemple but you must be original and not following too much the exemple:{exemple}"
+            ajout = f"The report is a yearly report for the year of {year}, write it keeping in mind that is a report for this given period."
+            exemple = f"4. exemple of a yearly report for the ikea foundation, you can use it as an exemple but you must be original and not following too much the exemple:{exemple}"
 
         prompt = f"""I want you to be a {report_type} report writer for the IKEA Foundation, your task is to write {report_type} report.{ajout}. The section you provide must be precise. Please follow the structured guidance provided below:
 
@@ -289,7 +296,7 @@ class DataGenerator:
                         3. Foundation Overview: Incorporate the following general information about the foundation to provide context and factual background in your report:
                         {general_info}
                         Note: This is the end of the general information.
-                        
+
                         {exemple}
 
                         The should create a streamlined, logically coherent report that is precise and detailed.
@@ -304,14 +311,20 @@ class DataGenerator:
         reponse = self.get_response(prompt)
 
         # Chemin du fichier CSV
-        output_file = "Create_yearly/data/data_gen/yearly_final_one.csv"
+        output_file = "Create_yearly/data/data_gen/yearly_final.csv"
 
         # Écriture dans le fichier CSV
         self.to__csv(output_file, reponse)
         return reponse
-    
+
     def generate_yearly_by_part(
-        self, report_type: str, year: str,df:pd.DataFrame, quarter: str = "", month: str = "", case: bool = False
+        self,
+        report_type: str,
+        year: str,
+        df: pd.DataFrame,
+        quarter: str = "",
+        month: str = "",
+        case: bool = False,
     ) -> pd.DataFrame:
         # Load data from CSV
         df_general_info = pd.read_csv(
@@ -322,7 +335,7 @@ class DataGenerator:
                 "Create_yearly/data/data_gen/projects_report.csv"
             )
         else:
-            df_projects_report=df
+            df_projects_report = df
 
         df_annal_template = pd.read_csv(
             "Create_yearly/data/data_scrapped/annualrewiew_template.csv"
@@ -338,7 +351,15 @@ class DataGenerator:
             case_0 = "this is the first part we are creating hence no previous part"
             if index == 0:
                 prompt = self.create_template(
-                    3, project_info, case_0, general_info, part["contenu"]
+                    3,
+                    project_info,
+                    case_0,
+                    general_info,
+                    part["contenu"],
+                    report_type,
+                    year,
+                    quarter,
+                    month,
                 )
             else:
                 prompt = self.create_template(
@@ -364,6 +385,52 @@ class DataGenerator:
             index=False,
         )
         return df_yearly_report
+
+    def generate_yearly_chosen_part(
+        self,
+        report_type: str,
+        year: str,
+        df: pd.DataFrame,
+        part: int,
+        quarter: str = "",
+        month: str = "",
+    ) -> str:
+        # Load data from CSV
+        df_general_info = pd.read_csv(
+            "Create_yearly/data/data_scrapped/yearly_report_data.csv"
+        )
+
+        df_projects_report = df
+
+        df_annual_template = pd.read_csv(
+            "Create_yearly/data/data_scrapped/annualrewiew_template.csv"
+        )
+
+        # Get the data of the right form
+        project_info = df_projects_report.to_string(index=False)
+        general_info = df_general_info.to_string(index=False)
+        print(df_annual_template.iloc[part]["contenu"])
+
+        prompt = self.create_template(
+            3,
+            project_info,
+            "",
+            general_info,
+            df_annual_template.iloc[part]["contenu"],
+            report_type,
+            year,
+            quarter,
+            month,
+        )
+        response = self.get_response(prompt)
+
+        # Save results to CSV
+        df_yearly_report = pd.DataFrame({"partie": [part], "contenu": [response]})
+        df_yearly_report.to_csv(
+            "Create_yearly/data/data_gen/yearly_final.csv",
+            index=False,
+        )
+        return response
 
     def transform_response(self, df_yearly_report: str) -> str:
         # df_yearly_report = pd.read_csv("../../../data/data_gen/yearly_by_part.csv")
@@ -510,15 +577,37 @@ def text_to_pdf(input_string: str, header: str, output_filename: str) -> None:
     pdf.output(output_filename)
 
 
+from docx import Document
+from docx.shared import Pt
+
+
 def text_to_docx(input_string: str, header: str, output_filename: str) -> None:
     document = Document()
 
     # Set header
     title = document.add_heading(level=1)
-    title.add_run(header)
+    title_run = title.add_run(header)
+    title_run.bold = True
+    title_run.font.size = Pt(14)
 
-    # Add the main text
-    document.add_paragraph(input_string)
+    # Analyze and add the main text
+    paragraphs = input_string.split("\n")
+    for paragraph in paragraphs:
+        if "**" in paragraph:
+            # Split the paragraph at each "**" and toggle the bold style
+            parts = paragraph.split("**")
+            p = document.add_paragraph()
+            bold = False
+            for part in parts:
+                run = p.add_run(part)
+                if bold:
+                    # Apply bold to the part between the "**"
+                    run.bold = True
+                # Toggle the bold state for the next part
+                bold = not bold
+        else:
+            # Regular paragraph
+            document.add_paragraph(paragraph)
 
     # Save the document
     document.save(output_filename)
