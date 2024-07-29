@@ -49,7 +49,7 @@ def main() -> None:
     # page = st.radio("", ["Yearly Report", "Appolo"])
 
     # Ouvrez l'image se trouvant en local
-    image = Image.open("../data/White logo - no background.png")
+    image = Image.open("./data/White logo - no background.png")
 
     # Allows to choose the position of the logo for all pages
     col1, col2, col3 = st.columns([1, 1, 1])
@@ -110,7 +110,7 @@ def main() -> None:
 
         month_start, month_end = get_report_period(year, report_type, quarter, month)
 
-        file_path = "Create_yearly/data/data_gen/cleaned_project_data_full.csv"
+        file_path = "./src/Create_yearly/data/data_gen/cleaned_project_data_full.csv"
 
         df = filter_by_date_2(file_path, month_start, month_end)
 
@@ -309,7 +309,7 @@ def main() -> None:
 
         if not create_project_report:
             # here we add the columns date to the results project df
-            file_path = "Create_yearly/data/data_gen/projects_report.csv"
+            file_path = "./src/Create_yearly/data/data_gen/projects_report.csv"
         #  df_v1 = pd.read_csv("Create_yearly/data/data_scrapped/ikea_foundation_projects.csv")
         #  df_ = pd.read_csv(file_path)
         #  df_["Date Choice"] = df_v1["Date Choice"]
@@ -325,7 +325,7 @@ def main() -> None:
         # st.write(df.shape[0], " projects found in the selected period.")
         if Demo:  # elseif recreate_option == 'No':
             full_report = pd.read_csv(
-                "Create_yearly/data/data_gen/yearly_final.csv",
+                "./src/Create_yearly/data/data_gen/yearly_final.csv",
                 header=None,
             )[0].values[0]
 
@@ -412,7 +412,7 @@ def main() -> None:
                     st.success(f"{report_type} report generated successfully!")
                 elif Demo:  # elseif recreate_option == 'No':
                     full_report = pd.read_csv(
-                        "Create_yearly/data/data_gen/yearly_final.csv",
+                        "./src/Create_yearly/data/data_gen/yearly_final.csv",
                         header=None,
                     )[0].values[0]
                     st.success("Yearly report generated successfully!")
@@ -436,7 +436,7 @@ def main() -> None:
         # make changes to the yearly report ( the result are used in the show yearly)
         if not only_part:
             full_report = pd.read_csv(
-                "Create_yearly/data/data_gen/yearly_final.csv", header=None
+                "./src/Create_yearly/data/data_gen/yearly_final.csv", header=None
             )[0].values[0]
 
         if "full_report" in locals():
@@ -459,7 +459,7 @@ def main() -> None:
             #   output_full = output_full_pdf
 
             # elif file_format == "DOCX":
-            output_full_docx = "Create_yearly/data/data_gen/yearly_report.docx"
+            output_full_docx = "./src/Create_yearly/data/data_gen/yearly_report.docx"
             text_to_docx(full_report_text, "Report", output_full_docx)
             # output_full = output_full_docx
 

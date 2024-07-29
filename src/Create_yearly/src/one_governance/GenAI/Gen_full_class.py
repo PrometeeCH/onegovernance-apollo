@@ -218,7 +218,7 @@ class DataGenerator:
 
     def generate_project_report(self) -> None:
         # Load projects from CSV
-        df_projects = pd.read_csv("Create_yearly/data/data_gen/filled_projects.csv")
+        df_projects = pd.read_csv("./src/Create_yearly/data/data_gen/filled_projects.csv")
 
         # Process each project
         results = []
@@ -233,7 +233,7 @@ class DataGenerator:
         # Save results to CSV
         df_results = pd.DataFrame(results, columns=["Filled Project Report"])
         df_results.to_csv(
-            "Create_yearly/data/data_gen/projects_report.csv",
+            "./src/Create_yearly/data/data_gen/projects_report.csv",
             index=False,
         )
 
@@ -252,20 +252,20 @@ class DataGenerator:
     ) -> str:
         # Load data from CSV
         df_general_info = pd.read_csv(
-            "Create_yearly/data/data_scrapped/yearly_report_data.csv"
+            "./src/Create_yearly/data/data_scrapped/yearly_report_data.csv"
         )
         if case:
             df_projects_report = pd.read_csv(
-                "Create_yearly/data/data_gen/projects_report.csv"
+                "./src/Create_yearly/data/data_gen/projects_report.csv"
             )
         else:
             df_projects_report = df
 
         df_annal_template = pd.read_csv(
-            "Create_yearly/data/data_scrapped/annualrewiew_template.csv"
+            "./src/Create_yearly/data/data_scrapped/annualrewiew_template.csv"
         )
         df_exemple = pd.read_csv(
-            "Create_yearly/data/data_scrapped/annualrewiew2022.csv"
+            "./src/Create_yearly/data/data_scrapped/annualrewiew2022.csv"
         )
 
         # Get the data of the right form
@@ -311,7 +311,7 @@ class DataGenerator:
         reponse = self.get_response(prompt)
 
         # Chemin du fichier CSV
-        output_file = "Create_yearly/data/data_gen/yearly_final.csv"
+        output_file = "./src/Create_yearly/data/data_gen/yearly_final.csv"
 
         # Écriture dans le fichier CSV
         self.to__csv(output_file, reponse)
@@ -328,17 +328,17 @@ class DataGenerator:
     ) -> pd.DataFrame:
         # Load data from CSV
         df_general_info = pd.read_csv(
-            "Create_yearly/data/data_scrapped/yearly_report_data.csv"
+            "./src/Create_yearly/data/data_scrapped/yearly_report_data.csv"
         )
         if case:
             df_projects_report = pd.read_csv(
-                "Create_yearly/data/data_gen/projects_report.csv"
+                "./src/Create_yearly/data/data_gen/projects_report.csv"
             )
         else:
             df_projects_report = df
 
         df_annal_template = pd.read_csv(
-            "Create_yearly/data/data_scrapped/annualrewiew_template.csv"
+            "./src/Create_yearly/data/data_scrapped/annualrewiew_template.csv"
         )
 
         # Get the data of the right form
@@ -381,7 +381,7 @@ class DataGenerator:
             {"partie": df_annal_template.index + 1, "contenu": yearly_parts}
         )
         df_yearly_report.to_csv(
-            "Create_yearly/data/data_gen/yearly_by_part.csv",
+            "./src/Create_yearly/data/data_gen/yearly_by_part.csv",
             index=False,
         )
         return df_yearly_report
@@ -397,19 +397,18 @@ class DataGenerator:
     ) -> str:
         # Load data from CSV
         df_general_info = pd.read_csv(
-            "Create_yearly/data/data_scrapped/yearly_report_data.csv"
+            "./src/Create_yearly/data/data_scrapped/yearly_report_data.csv"
         )
 
         df_projects_report = df
 
         df_annual_template = pd.read_csv(
-            "Create_yearly/data/data_scrapped/annualrewiew_template.csv"
+            "./src/Create_yearly/data/data_scrapped/annualrewiew_template.csv"
         )
 
         # Get the data of the right form
         project_info = df_projects_report.to_string(index=False)
         general_info = df_general_info.to_string(index=False)
-        print(df_annual_template.iloc[part]["contenu"])
 
         prompt = self.create_template(
             3,
@@ -427,7 +426,7 @@ class DataGenerator:
         # Save results to CSV
         df_yearly_report = pd.DataFrame({"partie": [part], "contenu": [response]})
         df_yearly_report.to_csv(
-            "Create_yearly/data/data_gen/yearly_final.csv",
+            "./src/Create_yearly/data/data_gen/yearly_final.csv",
             index=False,
         )
         return response
@@ -472,7 +471,7 @@ class DataGenerator:
         reponse = self.get_response(prompt)
 
         # Chemin du fichier CSV
-        output_file = "Create_yearly/data/data_gen/yearly_final.csv"
+        output_file = "./src/Create_yearly/data/data_gen/yearly_final.csv"
 
         # Écriture dans le fichier CSV
         self.to__csv(output_file, reponse)
@@ -487,7 +486,7 @@ class DataGenerator:
         All information from the original yearly report should be retained in the revised version, unless specified otherwise in the requested changes.
         """
         response = self.get_response(prompt)
-        output_file = "Create_yearly/data/data_gen/yearly_final_r.csv"
+        output_file = "./src/Create_yearly/data/data_gen/yearly_final_r.csv"
         self.to__csv(output_file, response)
 
         return response
@@ -514,7 +513,7 @@ class DataGenerator:
         response = self.get_response(prompt)
 
         # Chemin du fichier CSV
-        output_file = "Create_yearly/data/data_gen/yearly_summary.csv"
+        output_file = "./src/Create_yearly/data/data_gen/yearly_summary.csv"
 
         # Écriture dans le fichier CSV
         self.to__csv(output_file, response)
@@ -524,7 +523,7 @@ class DataGenerator:
     # fonction ######################################
     def nb_projects(self) -> int:
         df = pd.read_csv(
-            "Create_yearly/data/data_scrapped/ikea_foundation_projects.csv"
+            "./src/Create_yearly/data/data_scrapped/ikea_foundation_projects.csv"
         )
         return int(df.shape[0])
 
