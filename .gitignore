@@ -142,6 +142,8 @@ venv.bak/
 .spyderproject
 .spyproject
 
+.github/workflows
+
 # Rope project settings
 .ropeproject
 
