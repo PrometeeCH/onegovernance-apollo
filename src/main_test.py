@@ -441,7 +441,7 @@ def main() -> None:
 
         if "full_report" in locals():
             res = full_report
-            changes = st.text_area("Enter you wanted changes here...")
+            changes = st.text_area("Enter your wanted changes here...")
             if changes:
                 # Affiche un spinner pendant l'exécution de la fonction rewrite_yearly
                 with st.spinner("Text revision"):
