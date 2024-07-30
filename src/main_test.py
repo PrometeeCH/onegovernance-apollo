@@ -139,22 +139,23 @@ def main() -> None:
         ax.set_xlabel("Total Budget")
         ax.set_ylabel("Amount Funded")
         ax.set_title("Budget vs Funded Amount")
-        with st.expander("Budget vs. Funded Amount Comparison"):
-            
+        with st.expander("Budget vs. Funded Amount Comparison"): 
             st.pyplot(fig)
 
         # Répartition des projets selon leur durée
         project_duration = (
             df["10. End date_analyse"] - df["9. Start date_analyse"]
         ).dt.days
+
+        fig, ax = plt.subplots()
+        ax.hist(
+            project_duration.dropna(), bins=30
+        )  # Utilisation de dropna() pour éviter les NaN
+        ax.set_title("Distribution of Project Durations")
+        ax.set_xlabel("Duration (Days)")
+        ax.set_ylabel("Number of Projects")
         with st.expander("Project Duration Distribution"):
-            fig, ax = plt.subplots()
-            ax.hist(
-                project_duration.dropna(), bins=30
-            )  # Utilisation de dropna() pour éviter les NaN
-            ax.set_title("Distribution of Project Durations")
-            ax.set_xlabel("Duration (Days)")
-            ax.set_ylabel("Number of Projects")
+            
             st.pyplot(fig)
 
         np.random.seed(0)  # pour avoir des résultats reproductibles
@@ -190,19 +191,19 @@ def main() -> None:
         ################################################################################
 
         # Boxplot des Budgets par Mois/Trimestre
+        fig, ax = plt.subplots()
+        sns.boxplot(
+            x=df["9. Start date_analyse"].dt.to_period("M"),
+            y="5. Total Budget_analyse",
+            data=df,
+            ax=ax,
+        )
+        ax.set_title("Monthly Budget Distribution")
+        ax.set_xlabel("Month")
+        ax.set_ylabel("Budget")
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+        ax.invert_xaxis()
         with st.expander("Budget Distribution by Period"):
-            fig, ax = plt.subplots()
-            sns.boxplot(
-                x=df["9. Start date_analyse"].dt.to_period("M"),
-                y="5. Total Budget_analyse",
-                data=df,
-                ax=ax,
-            )
-            ax.set_title("Monthly Budget Distribution")
-            ax.set_xlabel("Month")
-            ax.set_ylabel("Budget")
-            ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
-            ax.invert_xaxis()
             st.pyplot(fig)
         # Compter les occurrences de chaque catégorie géographique
 
@@ -211,40 +212,41 @@ def main() -> None:
         # Calculer les proportions
         geography_proportions = geography_counts / geography_counts.sum()
 
+        fig, ax = plt.subplots()
+        # Créer un bar plot pour les proportions
+        geography_proportions.plot(kind="bar", color="skyblue", ax=ax)
+        ax.set_title("Proportion of Projects by Geography")
+        ax.set_xlabel("Geography")
+        ax.set_ylabel("Proportion")
+        # Rotation des étiquettes de l'axe x à la verticale pour une meilleure lisibilité
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+
+        # Ajouter des étiquettes de pourcentage sur chaque barre
+        for p in ax.patches:
+            ax.annotate(
+                f"{p.get_height():.2%}",
+                (p.get_x() + p.get_width() / 2.0, p.get_height()),
+                ha="center",
+                va="center",
+                xytext=(0, 10),
+                textcoords="offset points",
+            )
+
+        # Afficher le graphique dans Streamlit
+
         with st.expander("Proportion of Projects by Continent"):
-            fig, ax = plt.subplots()
-            # Créer un bar plot pour les proportions
-            geography_proportions.plot(kind="bar", color="skyblue", ax=ax)
-            ax.set_title("Proportion of Projects by Geography")
-            ax.set_xlabel("Geography")
-            ax.set_ylabel("Proportion")
-            # Rotation des étiquettes de l'axe x à la verticale pour une meilleure lisibilité
-            ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
-
-            # Ajouter des étiquettes de pourcentage sur chaque barre
-            for p in ax.patches:
-                ax.annotate(
-                    f"{p.get_height():.2%}",
-                    (p.get_x() + p.get_width() / 2.0, p.get_height()),
-                    ha="center",
-                    va="center",
-                    xytext=(0, 10),
-                    textcoords="offset points",
-                )
-
-            # Afficher le graphique dans Streamlit
             st.pyplot(fig)
 
         # Heatmap des Projets par Mois et Catégorie
+        project_heatmap_data = pd.crosstab(
+            df["9. Start date_analyse"].dt.month, df["Continent"]
+        )
+        fig, ax = plt.subplots()
+        sns.heatmap(project_heatmap_data, annot=True, cmap="Blues", ax=ax)
+        ax.set_title("Project Start Heatmap")
+        ax.set_xlabel("Continent")
+        ax.set_ylabel("Category")
         with st.expander("Project Start Heatmap by continent"):
-            project_heatmap_data = pd.crosstab(
-                df["9. Start date_analyse"].dt.month, df["Continent"]
-            )
-            fig, ax = plt.subplots()
-            sns.heatmap(project_heatmap_data, annot=True, cmap="Blues", ax=ax)
-            ax.set_title("Project Start Heatmap")
-            ax.set_xlabel("Continent")
-            ax.set_ylabel("Category")
             st.pyplot(fig)
 
     #################################################################################
