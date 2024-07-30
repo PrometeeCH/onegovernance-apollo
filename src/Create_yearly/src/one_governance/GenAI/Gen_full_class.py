@@ -20,14 +20,25 @@ class DataGenerator:
         )
 
 """
-class DataGenerator:
-    def __init__(self) -> None:
-        self.client = AzureOpenAI(
-            api_key=st.secrets["AZURE_OPENAI_API_KEY_CHAT"],
-            azure_endpoint=st.secrets["AZURE_OPENAI_ENDPOINT_CHAT"],
-            api_version=st.secrets["AZURE_OPENAI_API_VERSION_CHAT"],
-        )
 
+def get_secret(secret):
+    """Obtient des secrets à partir de .env ou secrets.toml pour 
+    l'exécution locale et le déploiement sur Streamlit respectivement."""
+    try:
+        # Tentative d'utilisation de secrets de Streamlit pour le déploiement
+        return st.secrets[secret]
+    except:
+        # Sinon, utilise des variables d'environnement pour l'exécution locale
+        return os.getenv(secret)
+
+
+class DataGenerator:
+   def __init__(self) -> None:
+    self.client = AzureOpenAI(
+        api_key=get_secret("AZURE_OPENAI_API_KEY_CHAT"),
+        azure_endpoint=get_secret("AZURE_OPENAI_ENDPOINT_CHAT"),
+        api_version=get_secret("AZURE_OPENAI_API_VERSION_CHAT"),
+    )
     def create_template(
         self,
         case: int,
