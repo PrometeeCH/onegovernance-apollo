@@ -385,7 +385,7 @@ def main() -> None:
                     st.subheader("Report")
                     st.write(full_report)
 
-        else:
+        elif not only_part:
             if st.button("Generate report"):
                 if not Demo:
                     if one_shot and not only_part:
@@ -434,10 +434,11 @@ def main() -> None:
         #    st.write(summary)
 
         # make changes to the yearly report ( the result are used in the show yearly)
-        if not only_part:
-            full_report = pd.read_csv(
-                "./src/Create_yearly/data/data_gen/yearly_final.csv", header=None
-            )[0].values[0]
+        #if not only_part:
+        full_report = pd.read_csv(
+            "./src/Create_yearly/data/data_gen/yearly_final.csv", header=None
+        )[0].values[0]
+        
 
         if "full_report" in locals():
             res = full_report

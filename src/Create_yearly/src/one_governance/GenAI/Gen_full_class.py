@@ -421,15 +421,16 @@ class DataGenerator:
             quarter,
             month,
         )
-        response = self.get_response(prompt)
 
-        # Save results to CSV
-        df_yearly_report = pd.DataFrame({"partie": [part], "contenu": [response]})
-        df_yearly_report.to_csv(
-            "./src/Create_yearly/data/data_gen/yearly_final.csv",
-            index=False,
-        )
-        return response
+
+        reponse = self.get_response(prompt)
+
+        # Chemin du fichier CSV
+        output_file = "./src/Create_yearly/data/data_gen/yearly_final.csv"
+
+        # Écriture dans le fichier CSV
+        self.to__csv(output_file, reponse)
+        return reponse
 
     def transform_response(self, df_yearly_report: str) -> str:
         # df_yearly_report = pd.read_csv("../../../data/data_gen/yearly_by_part.csv")
@@ -480,7 +481,7 @@ class DataGenerator:
 
     def rewrite_yearly(self, changes: str, full_report: str) -> str:
         prompt = f"""As a report editor, you're tasked with modifying the following report: {full_report}.
-        The requested modifications are as follows: {changes}.
+        The requested modifications fot the report are as follows: {changes}.
         Please ensure these adjustments are both accurate and closely aligned with the original content.
         It's important to note that these changes are your top priority.
         All information from the original yearly report should be retained in the revised version, unless specified otherwise in the requested changes.
