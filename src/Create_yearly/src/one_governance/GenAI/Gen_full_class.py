@@ -8,14 +8,24 @@ from docx import Document
 from docx.shared import Pt
 from fpdf import FPDF
 from openai import AzureOpenAI
+import streamlit as st
 
-
+"""
 class DataGenerator:
     def __init__(self) -> None:
         self.client = AzureOpenAI(
             api_key=os.environ["AZURE_OPENAI_API_KEY_CHAT"],
             azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT_CHAT"],
             api_version=os.environ["AZURE_OPENAI_API_VERSION_CHAT"],
+        )
+
+"""
+class DataGenerator:
+    def __init__(self) -> None:
+        self.client = AzureOpenAI(
+            api_key=st.secrets["AZURE_OPENAI_API_KEY_CHAT"],
+            azure_endpoint=st.secrets["AZURE_OPENAI_ENDPOINT_CHAT"],
+            api_version=st.secrets["AZURE_OPENAI_API_VERSION_CHAT"],
         )
 
     def create_template(
@@ -167,7 +177,7 @@ class DataGenerator:
 
     def get_response(self, prompt_: str) -> str:
         response = self.client.chat.completions.create(
-            model=os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT_NAME"],
+            model=st.secrets["AZURE_OPENAI_CHAT_DEPLOYMENT_NAME"],
             messages=[{"role": "user", "content": prompt_}],
             max_tokens=4096,
             temperature=0.7,
