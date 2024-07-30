@@ -132,14 +132,15 @@ def main() -> None:
         print("-------------------------------")
 
         # Comparaison des budgets initiaux et des montants financés
-        with st.expander("Budget vs. Funded Amount Comparison"):
-            fig, ax = plt.subplots()
-            ax.scatter(
+        fig, ax = plt.subplots()
+        ax.scatter(
                 df["5. Total Budget_analyse"], df["6. Amount funded_analyse"], alpha=0.5
             )
-            ax.set_xlabel("Total Budget")
-            ax.set_ylabel("Amount Funded")
-            ax.set_title("Budget vs Funded Amount")
+        ax.set_xlabel("Total Budget")
+        ax.set_ylabel("Amount Funded")
+        ax.set_title("Budget vs Funded Amount")
+        with st.expander("Budget vs. Funded Amount Comparison"):
+            
             st.pyplot(fig)
 
         # Répartition des projets selon leur durée
