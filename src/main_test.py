@@ -31,7 +31,7 @@ def main() -> None:
     create_all_project_report = False  # to create all the report for each project at the beginning of the user exp
     one_shot = True  # si on veut ecrire le rapport en une fois et non par partie
 
-    st.set_page_config(page_title="Apollo", layout="wide")
+    st.set_page_config(page_title="OneGovernance", layout="wide")
 
     # Write ikea project overwiew
 
